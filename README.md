@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/515de901e3194e249ad7da95662ae27d)](https://app.codacy.com/app/SoftCreatR/php-mime-detector?utm_source=github.com&utm_medium=referral&utm_content=SoftCreatR/php-mime-detector&utm_campaign=Badge_Grade_Settings)
 # PHP Mime Detector [![Build Status](https://travis-ci.com/SoftCreatR/php-mime-detector.svg?branch=master)](https://travis-ci.com/SoftCreatR/php-mime-detector)
 
 Detecting the real type of a (binary) file doesn't have to be hard. Checking a file's extension is not reliable and can cause serious security issues.
