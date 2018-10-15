@@ -1,4 +1,4 @@
-# PHP Mime Detector [![Build Status](https://travis-ci.com/SoftCreatR/php-mime-detector.svg?branch=master)](https://travis-ci.com/SoftCreatR/php-mime-detector) [ ![Codeship Status for SoftCreatR/php-mime-detector](https://app.codeship.com/projects/9ed81740-b269-0136-7bd2-3ad13aca57c1/status?branch=master)](https://app.codeship.com/projects/310674)
+# PHP Mime Detector [![Build Status](https://travis-ci.com/SoftCreatR/php-mime-detector.svg?branch=master)](https://travis-ci.com/SoftCreatR/php-mime-detector) [![Codeship Status for SoftCreatR/php-mime-detector](https://app.codeship.com/projects/9ed81740-b269-0136-7bd2-3ad13aca57c1/status?branch=master)](https://app.codeship.com/projects/310674)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/softcreatr/php-mime-detector/badge)](https://www.codefactor.io/repository/github/softcreatr/php-mime-detector)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4d404e53d8ec465197a38d9b15c4746e)](https://www.codacy.com/app/SoftCreatR/php-mime-detector?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=SoftCreatR/php-mime-detector&amp;utm_campaign=Badge_Grade)
@@ -14,9 +14,9 @@ A list of supported file types can be found on [this Wiki page](https://github.c
 
 ## Requirements
 
-- PHP 7.1 or newer
-- HTTP server with PHP support (eg: Apache, Nginx, Caddy)
-- [Composer](https://getcomposer.org)
+-   PHP 7.1 or newer
+-   HTTP server with PHP support (eg: Apache, Nginx, Caddy)
+-   [Composer](https://getcomposer.org)
 
 ## Installation
 
