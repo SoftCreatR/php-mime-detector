@@ -1,0 +1,53 @@
+{
+    "name": "softcreatr/php-mime-detector",
+    "description": "Mime Detector Decoder",
+    "license": "LGPL-3.0",
+    "keywords": [
+        "Mime",
+        "File Type",
+        "Magic Number"
+    ],
+    "homepage": "https://www.softcreatr.com",
+    "authors": [
+        {
+            "name": "Sascha Greuel",
+            "email": "sascha@softcreatr.de"
+        },
+        {
+            "name": "Sebastian Zimmer",
+            "email": "morik@softcreatr.de"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/SoftCreatR/php-mime-detector",
+        "issues": "https://github.com/SoftCreatR/php-mime-detector/issues",
+        "forum": "https://support.softcreatr.com"
+    },
+    "version": "1.0.0",
+    "require": {
+        "php": ">=7.1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~7.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "SoftCreatR\\MimeDetector\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-0": {
+            "SoftCreatR\\Tests\\MimeDetector\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "config": {
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
