@@ -111,8 +111,10 @@ class MimeDetector
     
     /**
      * Returns an unique instance of the MimeDetector class.
+     *
+     * @return  MimeDetector
      */
-    public static function getInstance()
+    public static function getInstance(): MimeDetector
     {
         if (empty(self::$instance)) {
             self::$instance = new MimeDetector();
