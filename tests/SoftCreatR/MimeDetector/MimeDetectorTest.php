@@ -32,10 +32,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector = $this->getInstance();
         
         self::assertInstanceOf(MimeDetector::class, $mimeDetector);
-        self::assertAttributeInternalType('array', 'byteCache', $mimeDetector);
-        self::assertAttributeInternalType('int', 'byteCacheLen', $mimeDetector);
-        self::assertAttributeInternalType('string', 'file', $mimeDetector);
-        self::assertAttributeInternalType('string', 'fileHash', $mimeDetector);
     }
     
     /**
@@ -46,7 +42,7 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testSetFileThrowsException(): void
     {
-        self::expectException(MimeDetectorException::class);
+        $this->expectException(MimeDetectorException::class);
         
         $mimeDetector = MimeDetector::getInstance();
         $mimeDetector->setFile('nonexistant.file');
@@ -67,8 +63,8 @@ class MimeDetectorTest extends TestCaseImplementation
             
             self::assertAttributeNotEmpty('byteCache', $mimeDetector);
             self::assertAttributeGreaterThanOrEqual(1, 'byteCacheLen', $mimeDetector);
-            self::assertAttributeEquals($testFile['file'], 'file', $mimeDetector);
-            self::assertAttributeEquals($testFile['hash'], 'fileHash', $mimeDetector);
+            self::assertAttributeSame($testFile['file'], 'file', $mimeDetector);
+            self::assertAttributeSame($testFile['hash'], 'fileHash', $mimeDetector);
         }
     }
     
@@ -90,7 +86,6 @@ class MimeDetectorTest extends TestCaseImplementation
         
         $fileData = $mimeDetector->getFileType();
         
-        self::assertInternalType('array', $fileData);
         self::assertEmpty($fileData);
     }
     
@@ -106,7 +101,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $fileData = $mimeDetector->getFileType();
         
-        self::assertInternalType('array', $fileData);
         self::assertEmpty($fileData);
     }
     
@@ -124,8 +118,7 @@ class MimeDetectorTest extends TestCaseImplementation
             $mimeDetector->setFile($testFile['file']);
             $fileData = $mimeDetector->getFileType();
             
-            self::assertInternalType('array', $fileData);
-            self::assertEquals($testFile['ext'], $fileData['ext']);
+            self::assertSame($testFile['ext'], $fileData['ext']);
         }
     }
     
@@ -142,7 +135,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $detectedExtension = $mimeDetector->getFileExtension();
         
-        self::assertInternalType('string', $detectedExtension);
         self::assertEmpty($detectedExtension);
     }
     
@@ -160,8 +152,7 @@ class MimeDetectorTest extends TestCaseImplementation
             $mimeDetector->setFile($testFile['file']);
             $detectedExtension = $mimeDetector->getFileExtension();
             
-            self::assertInternalType('string', $detectedExtension);
-            self::assertEquals($testFile['ext'], $detectedExtension);
+            self::assertSame($testFile['ext'], $detectedExtension);
         }
     }
     
@@ -178,7 +169,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $detectedMimeType = $mimeDetector->getMimeType();
         
-        self::assertInternalType('string', $detectedMimeType);
         self::assertEmpty($detectedMimeType);
     }
     
@@ -197,7 +187,6 @@ class MimeDetectorTest extends TestCaseImplementation
             $detectedMimeType = $mimeDetector->getMimeType();
             
             // we don't know the mime type of our test file, so we'll just check, if any mimetype has been detected
-            self::assertInternalType('string', $detectedMimeType);
             self::assertNotEmpty($detectedMimeType);
         }
     }
@@ -230,7 +219,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector = $this->getInstance();
         $result = $mimeDetector->toBytes('php');
         
-        self::assertInternalType('array', $result);
         self::assertEquals([112, 104, 112], $result);
     }
     
@@ -246,7 +234,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'checkString');
         $result = $method->invoke($mimeDetector, 'php', 2);
         
-        self::assertInternalType('bool', $result);
         self::assertTrue($result);
     }
     
@@ -264,7 +251,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'searchForBytes');
         $result = $method->invoke($mimeDetector, [0x66, 0x6F, 0x6F]); // foo
         
-        self::assertInternalType('int', $result);
         self::assertEquals(-1, $result);
     }
     
@@ -280,7 +266,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'searchForBytes');
         $result = $method->invoke($mimeDetector, [0x70, 0x68, 0x70]); // php
         
-        self::assertInternalType('int', $result);
         self::assertEquals(2, $result);
     }
     
@@ -298,7 +283,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'checkForBytes');
         $result = $method->invoke($mimeDetector, []);
         
-        self::assertInternalType('bool', $result);
         self::assertFalse($result);
     }
     
@@ -314,7 +298,6 @@ class MimeDetectorTest extends TestCaseImplementation
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'checkForBytes');
         $result = $method->invoke($mimeDetector, [0x70, 0x68, 0x70], 2); // php
         
-        self::assertInternalType('bool', $result);
         self::assertTrue($result);
     }
     
@@ -344,7 +327,7 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testCreateByteCacheException(): void
     {
-        self::expectException(MimeDetectorException::class);
+        $this->expectException(MimeDetectorException::class);
         
         $mimeDetector = $this->getInstance();
         $mimeDetector->setFile(__FILE__);
