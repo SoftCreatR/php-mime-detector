@@ -48,6 +48,32 @@ class MimeDetector
     private $fileHash = '';
     
     /**
+     * Font Awesome Icon classes
+     *
+     * @var array
+     */
+    protected $fontAwesomeIcons = [
+        'application/application/vnd.oasis.opendocument.spreadsheet' => 'fa-file-excel-o',
+        'application/gzip' => 'fa-file-archive-o',
+        'application/json' => 'fa-file-code-o',
+        'application/msword' => 'fa-file-word-o',
+        'application/pdf' => 'fa-file-pdf-o',
+        'application/vnd.ms-excel' => 'fa-file-excel-o',
+        'application/vnd.ms-powerpoint' => 'fa-file-powerpoint-o',
+        'application/vnd.ms-word' => 'fa-file-word-o',
+        'application/vnd.oasis.opendocument.presentation' => 'fa-file-powerpoint-o',
+        'application/vnd.oasis.opendocument.spreadsheet' => 'fa-file-excel-o',
+        'application/vnd.oasis.opendocument.text' => 'fa-file-word-o',
+        'application/vnd.openxmlformats-officedocument.presentationml' => 'fa-file-powerpoint-o',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml' => 'fa-file-excel-o',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml' => 'fa-file-word-o',
+        'application/zip' => 'fa-file-archive-o',
+        'audio' => 'fa-file-audio-o',
+        'image' => 'fa-file-image-o',
+        'video' => 'fa-file-video-o'
+    ];
+    
+    /**
      * Singletons do not support a public constructor. Override init() if
      * you need to initialize components on creation.
      */
@@ -127,6 +153,10 @@ class MimeDetector
      */
     public function getFileType(): array
     {
+        if (empty($this->byteCache)) {
+            return [];
+        }
+        
         // Perform check
         if ($this->checkForBytes([0xFF, 0xD8, 0xFF])) {
             return [
@@ -981,6 +1011,32 @@ class MimeDetector
         }
         
         return '';
+    }
+    
+    /**
+     * Returns the appropriate Font Awesome icon class for the given file or a given mime type.
+     *
+     * @param   string  $fileMimeType
+     * @param   bool    $fixedWidth
+     * @return  string
+     */
+    public function getFontAwesomeIcon(string $fileMimeType = '', bool $fixedWidth = false): string
+    {
+        $iconClass = 'fa-file-o';
+        
+        if (empty($fileMimeType)) {
+            $fileMimeType = $this->getMimeType();
+        }
+        
+        if (!empty($fileMimeType)) {
+            foreach ($this->fontAwesomeIcons as $iconMimeType => $iconName) {
+                if (strpos($fileMimeType, $iconMimeType) !== false) {
+                    $iconClass = $iconName;
+                }
+            }
+        }
+        
+        return 'fa ' . $iconClass . ($fixedWidth ? ' fa-fw' : '');
     }
     
     /**

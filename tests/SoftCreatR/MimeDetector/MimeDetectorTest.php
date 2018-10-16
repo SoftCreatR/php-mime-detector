@@ -73,6 +73,44 @@ class MimeDetectorTest extends TestCaseImplementation
     }
     
     /**
+     * Test, if `getFileType` returns an empty array, if the bytecache is empty (i.e. empty file provided).
+     *
+     * @return  void
+     * @throws  MimeDetectorException
+     * @throws  ReflectionException
+     */
+    public function testGetFileTypeReturnEmptyArrayWithoutByteCache(): void
+    {
+        $mimeDetector = $this->getInstance();
+        $mimeDetector->setFile(__FILE__);
+    
+        MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'byteCache', []);
+        MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'file', '');
+        MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'fileHash', '');
+        
+        $fileData = $mimeDetector->getFileType();
+        
+        self::assertInternalType('array', $fileData);
+        self::assertEmpty($fileData);
+    }
+    
+    /**
+     * Test, if `getFileType` returns an empty array, if the file type is unknown.
+     *
+     * @return  void
+     * @throws  MimeDetectorException
+     */
+    public function testGetFileTypeReturnEmptyArrayWithUnknownFileType(): void
+    {
+        $mimeDetector = $this->getInstance();
+        $mimeDetector->setFile(__FILE__);
+        $fileData = $mimeDetector->getFileType();
+        
+        self::assertInternalType('array', $fileData);
+        self::assertEmpty($fileData);
+    }
+    
+    /**
      * @dataProvider    provideTestFiles
      * @param           array $testFiles
      * @return          void
@@ -162,6 +200,26 @@ class MimeDetectorTest extends TestCaseImplementation
             self::assertInternalType('string', $detectedMimeType);
             self::assertNotEmpty($detectedMimeType);
         }
+    }
+    
+    /**
+     * @dataProvider    provideFontAwesomeIcons
+     * @param   array   $fontAwesomeIcons
+     * @return  void
+     * @throws  MimeDetectorException
+     */
+    public function testGetFontAwesomeIcon(array $fontAwesomeIcons): void
+    {
+        $mimeDetector = $this->getInstance();
+        
+        foreach ($fontAwesomeIcons as $mimeType => $params) {
+            self::assertSame('fa ' . $params[0], $mimeDetector->getFontAwesomeIcon($mimeType, $params[1]));
+        }
+        
+        $mimeDetector->setFile(__FILE__);
+        
+        self::assertSame('fa fa-file-o', $mimeDetector->getFontAwesomeIcon());
+        self::assertSame('fa fa-file-o fa-fw', $mimeDetector->getFontAwesomeIcon('', true));
     }
     
     /**
@@ -319,5 +377,34 @@ class MimeDetectorTest extends TestCaseImplementation
         }
         
         return [[$files]];
+    }
+    
+    /**
+     * Returns an array of all existing test files and their corresponding CRC32b hashes.
+     *
+     * @return array
+     */
+    public function provideFontAwesomeIcons(): array
+    {
+        return [[[
+            'application/application/vnd.oasis.opendocument.spreadsheet' => ['fa-file-excel-o', false],
+            'application/gzip' => ['fa-file-archive-o', false],
+            'application/json' => ['fa-file-code-o', false],
+            'application/msword' => ['fa-file-word-o', false],
+            'application/pdf' => ['fa-file-pdf-o', false],
+            'application/vnd.ms-excel' => ['fa-file-excel-o', false],
+            'application/vnd.ms-powerpoint' => ['fa-file-powerpoint-o', false],
+            'application/vnd.ms-word' => ['fa-file-word-o', false],
+            'application/vnd.oasis.opendocument.presentation' => ['fa-file-powerpoint-o', false],
+            'application/vnd.oasis.opendocument.spreadsheet' => ['fa-file-excel-o', false],
+            'application/vnd.oasis.opendocument.text' => ['fa-file-word-o', false],
+            'application/vnd.openxmlformats-officedocument.presentationml' => ['fa-file-powerpoint-o', false],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml' => ['fa-file-excel-o', false],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml' => ['fa-file-word-o', false],
+            'application/zip' => ['fa-file-archive-o', false],
+            'audio' => ['fa-file-audio-o', false],
+            'image' => ['fa-file-image-o', false],
+            'video' => ['fa-file-video-o', false]
+        ]]];
     }
 }
