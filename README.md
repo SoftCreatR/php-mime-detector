@@ -12,6 +12,18 @@ However, this package isn't a replacement for any security software. It just aim
 
 A list of supported file types can be found on [this Wiki page](https://github.com/SoftCreatR/php-mime-detector/wiki/Supported-file-types).
 
+#### Why a separate class?
+
+You may wonder, why we don't just rely on extensions like [Fileinfo](https://secure.php.net/manual/en/book.fileinfo.php)? First off all, a short background story:
+
+We are building extensions and applications for an Open Source PHP Framework, thus we are creating web software for the masses. Many of our customers and/or users of our free products are on shared hosting without any possibility to install or manage installed PHP extensions. So our goal is to develop solutions with as few dependencies as necessary, but with as much functionality as possible.
+
+While developing a solution, that allows people to convert HEIF/HEIC files to a more "standardized" format (using our own, external API), we had troubles detecting these files, because especially this format isn't known by most Webservers, yet. While checking the file extension isn't reliable, we had to find a reusable solution that works for most of our clients. So we started to build a magic number based check for these files. That was the birth of our Mime Detector.
+
+#### Why are the unit tests so poorly written?
+
+Short answer: I have just little experience in unit testing. This project was a good training and even if the unit tests could be better: I am proud of my progress :)
+
 ## Requirements
 
 -   PHP 7.1 or newer
