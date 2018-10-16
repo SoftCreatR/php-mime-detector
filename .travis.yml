@@ -7,6 +7,9 @@ install:
   - travis_retry composer install --no-interaction --no-suggest
 script:
   - vendor/bin/phpunit --coverage-clover=coverage.xml
+after_script:
+  - wget http://psvcg.coreteks.org/php-semver-checker-git.phar
+  - php php-semver-checker-git.phar -vvv
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 branches:
