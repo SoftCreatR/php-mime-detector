@@ -355,22 +355,6 @@ class MimeDetector
             ];
         }
         
-        if ($this->checkString('<?xml ')) {
-            if ($this->searchForBytes($this->toBytes('<!doctype svg'), 6) !== -1 ||
-                $this->searchForBytes($this->toBytes('<svg'), 6) !== -1
-            ) {
-                return [
-                    'ext' => 'svg',
-                    'mime' => 'image/svg+xml'
-                ];
-            }
-            
-            return [
-                'ext' => 'xml',
-                'mime' => 'application/xml'
-            ];
-        }
-        
         if ($this->checkForBytes([0x1F, 0x8B, 0x8])) {
             return [
                 'ext' => 'gz',
@@ -977,6 +961,59 @@ class MimeDetector
             return [
                 'ext' => 'luac',
                 'mime' => 'application/x-lua-bytecode'
+            ];
+        }
+        
+        // this class is intended to detect binary files, only. But there's nothing wrong in
+        // trying to detect text files aswell.
+        if ($this->checkString('<?xml ')) {
+            if ($this->searchForBytes($this->toBytes('<!doctype svg'), 6) !== -1 ||
+                $this->searchForBytes($this->toBytes('<!DOCTYPE svg'), 6) !== -1 ||
+                $this->searchForBytes($this->toBytes('<svg'), 6) !== -1
+            ) {
+                return [
+                    'ext' => 'svg',
+                    'mime' => 'image/svg+xml'
+                ];
+            }
+            
+            if ($this->searchForBytes($this->toBytes('<!doctype html'), 6) !== -1 ||
+                $this->searchForBytes($this->toBytes('<!DOCTYPE html'), 6) !== -1 ||
+                $this->searchForBytes($this->toBytes('<html'), 6) !== -1
+            ) {
+                return [
+                    'ext' => 'html',
+                    'mime' => 'text/html'
+                ];
+            }
+            
+            if ($this->searchForBytes($this->toBytes('<rdf:RDF'), 6) !== -1) {
+                return [
+                    'ext' => 'rdf',
+                    'mime' => 'application/rdf+xml'
+                ];
+            }
+            
+            if ($this->searchForBytes($this->toBytes('<rss version="2.0"'), 6) !== -1) {
+                return [
+                    'ext' => 'rss',
+                    'mime' => 'application/rss+xml'
+                ];
+            }
+            
+            return [
+                'ext' => 'xml',
+                'mime' => 'application/xml'
+            ];
+        }
+        
+        if ($this->checkString('<!doctype html') ||
+            $this->checkString('<!DOCTYPE html') ||
+            $this->checkString('<html')
+        ) {
+            return [
+                'ext' => 'html',
+                'mime' => 'text/html'
             ];
         }
         
