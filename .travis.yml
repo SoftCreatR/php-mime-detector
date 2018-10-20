@@ -12,10 +12,6 @@ after_script:
   - php php-semver-checker-git.phar suggest -vvv
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-branches:
-  only:
-    - master
-    - dev
 cache:
   directories:
     - $HOME/.composer/cache

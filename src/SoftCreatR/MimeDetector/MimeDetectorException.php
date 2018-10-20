@@ -7,7 +7,7 @@ use Exception;
 
 /**
  * Default exception for MimeDetector related errors.
- * 
+ *
  * @copyright   SoftCreatR Media
  * @license     LGPL-3.0
  * @package     SoftCreatR\MimeDetector
