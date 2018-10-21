@@ -20,20 +20,20 @@ class MimeDetectorTest extends TestCaseImplementation
     public function getInstance(): MimeDetector
     {
         $mimeDetector = MimeDetector::getInstance();
-        
+
         return $mimeDetector;
     }
-    
+
     /**
      * @return  void
      */
     public function testGetInstance(): void
     {
         $mimeDetector = $this->getInstance();
-        
+
         self::assertInstanceOf(MimeDetector::class, $mimeDetector);
     }
-    
+
     /**
      * Test, if `setFile` throws an exception, if the provided file does not exist.
      *
@@ -43,11 +43,11 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testSetFileThrowsException(): void
     {
         $this->expectException(MimeDetectorException::class);
-        
+
         $mimeDetector = MimeDetector::getInstance();
         $mimeDetector->setFile('nonexistant.file');
     }
-    
+
     /**
      * @dataProvider    provideTestFiles
      * @param           array $testFiles
@@ -57,17 +57,17 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testSetFile($testFiles): void
     {
         $mimeDetector = $this->getInstance();
-        
+
         foreach ($testFiles as $testFile) {
             $mimeDetector->setFile($testFile['file']);
-            
+
             self::assertAttributeNotEmpty('byteCache', $mimeDetector);
             self::assertAttributeGreaterThanOrEqual(1, 'byteCacheLen', $mimeDetector);
             self::assertAttributeSame($testFile['file'], 'file', $mimeDetector);
             self::assertAttributeSame($testFile['hash'], 'fileHash', $mimeDetector);
         }
     }
-    
+
     /**
      * Test, if `getFileType` returns an empty array, if the bytecache is empty (i.e. empty file provided).
      *
@@ -79,16 +79,16 @@ class MimeDetectorTest extends TestCaseImplementation
     {
         $mimeDetector = $this->getInstance();
         $mimeDetector->setFile(__FILE__);
-    
+
         MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'byteCache', []);
         MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'file', '');
         MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'fileHash', '');
-        
+
         $fileData = $mimeDetector->getFileType();
-        
+
         self::assertEmpty($fileData);
     }
-    
+
     /**
      * Test, if `getFileType` returns an empty array, if the file type is unknown.
      *
@@ -100,10 +100,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector = $this->getInstance();
         $mimeDetector->setFile(__FILE__);
         $fileData = $mimeDetector->getFileType();
-        
+
         self::assertEmpty($fileData);
     }
-    
+
     /**
      * @dataProvider    provideTestFiles
      * @param           array $testFiles
@@ -113,15 +113,15 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testGetFileType(array $testFiles): void
     {
         $mimeDetector = $this->getInstance();
-        
+
         foreach ($testFiles as $testFile) {
             $mimeDetector->setFile($testFile['file']);
             $fileData = $mimeDetector->getFileType();
-            
+
             self::assertSame($testFile['ext'], $fileData['ext']);
         }
     }
-    
+
     /**
      * Test, if `getFileExtension` returns an empty string, if the file type of the provided file cannot be determined.
      *
@@ -134,10 +134,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector = $this->getInstance();
         $mimeDetector->setFile(__FILE__);
         $detectedExtension = $mimeDetector->getFileExtension();
-        
+
         self::assertEmpty($detectedExtension);
     }
-    
+
     /**
      * @dataProvider    provideTestFiles
      * @param           array $testFiles
@@ -147,15 +147,15 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testGetFileExtension(array $testFiles): void
     {
         $mimeDetector = $this->getInstance();
-        
+
         foreach ($testFiles as $testFile) {
             $mimeDetector->setFile($testFile['file']);
             $detectedExtension = $mimeDetector->getFileExtension();
-            
+
             self::assertSame($testFile['ext'], $detectedExtension);
         }
     }
-    
+
     /**
      * Test, if `getMimeType` returns an empty string, if the file type of the provided file cannot be determined.
      *
@@ -168,10 +168,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector = $this->getInstance();
         $mimeDetector->setFile(__FILE__);
         $detectedMimeType = $mimeDetector->getMimeType();
-        
+
         self::assertEmpty($detectedMimeType);
     }
-    
+
     /**
      * @dataProvider    provideTestFiles
      * @param           array $testFiles
@@ -181,16 +181,16 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testGetMimeType(array $testFiles): void
     {
         $mimeDetector = $this->getInstance();
-        
+
         foreach ($testFiles as $testFile) {
             $mimeDetector->setFile($testFile['file']);
             $detectedMimeType = $mimeDetector->getMimeType();
-            
+
             // we don't know the mime type of our test file, so we'll just check, if any mimetype has been detected
             self::assertNotEmpty($detectedMimeType);
         }
     }
-    
+
     /**
      * @dataProvider    provideFontAwesomeIcons
      * @param   array   $fontAwesomeIcons
@@ -200,17 +200,17 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testGetFontAwesomeIcon(array $fontAwesomeIcons): void
     {
         $mimeDetector = $this->getInstance();
-        
+
         foreach ($fontAwesomeIcons as $mimeType => $params) {
             self::assertSame('fa ' . $params[0], $mimeDetector->getFontAwesomeIcon($mimeType, $params[1]));
         }
-        
+
         $mimeDetector->setFile(__FILE__);
-        
+
         self::assertSame('fa fa-file-o', $mimeDetector->getFontAwesomeIcon());
         self::assertSame('fa fa-file-o fa-fw', $mimeDetector->getFontAwesomeIcon('', true));
     }
-    
+
     /**
      * @return void
      */
@@ -218,10 +218,10 @@ class MimeDetectorTest extends TestCaseImplementation
     {
         $mimeDetector = $this->getInstance();
         $result = $mimeDetector->toBytes('php');
-        
+
         self::assertEquals([112, 104, 112], $result);
     }
-    
+
     /**
      * @return  void
      * @throws  ReflectionException
@@ -233,10 +233,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'checkString');
         $result = $method->invoke($mimeDetector, 'php', 2);
-        
+
         self::assertTrue($result);
     }
-    
+
     /**
      * Test, if `searchForBytes` returns -1, if a byte array is provided, that isn't in the cached byte array.
      *
@@ -250,10 +250,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'searchForBytes');
         $result = $method->invoke($mimeDetector, [0x66, 0x6F, 0x6F]); // foo
-        
+
         self::assertEquals(-1, $result);
     }
-    
+
     /**
      * @return  void
      * @throws  MimeDetectorException
@@ -265,10 +265,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'searchForBytes');
         $result = $method->invoke($mimeDetector, [0x70, 0x68, 0x70]); // php
-        
+
         self::assertEquals(2, $result);
     }
-    
+
     /**
      * Test, if `checkForBytes` returns false, if an empty byte array is provided.
      *
@@ -282,10 +282,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'checkForBytes');
         $result = $method->invoke($mimeDetector, []);
-        
+
         self::assertFalse($result);
     }
-    
+
     /**
      * @return  void
      * @throws  MimeDetectorException
@@ -297,10 +297,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'checkForBytes');
         $result = $method->invoke($mimeDetector, [0x70, 0x68, 0x70], 2); // php
-        
+
         self::assertTrue($result);
     }
-    
+
     /**
      * Test, if `createByteCache` returns early.
      *
@@ -314,10 +314,10 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setFile(__FILE__);
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'createByteCache');
         $result = $method->invoke($mimeDetector);
-        
+
         self::assertNull($result);
     }
-    
+
     /**
      * Test, if `createByteCache` throws a MimeDetectorException.
      *
@@ -328,18 +328,18 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testCreateByteCacheException(): void
     {
         $this->expectException(MimeDetectorException::class);
-        
+
         $mimeDetector = $this->getInstance();
         $mimeDetector->setFile(__FILE__);
-        
+
         MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'byteCache', []);
         MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'file', '');
         MimeDetectorTestUtil::setPrivateProperty($mimeDetector, 'fileHash', '');
-        
+
         $method = MimeDetectorTestUtil::getProtectedMethod($mimeDetector, 'createByteCache');
         $method->invoke($mimeDetector);
     }
-    
+
     /**
      * Returns an array of all existing test files and their corresponding CRC32b hashes.
      *
@@ -348,7 +348,7 @@ class MimeDetectorTest extends TestCaseImplementation
     public function provideTestFiles(): array
     {
         $files = [];
-        
+
         foreach (new DirectoryIterator(__DIR__ . '/fixtures') as $file) {
             if ($file->isFile() && $file->getBasename() !== '.git') {
                 $files[$file->getBasename()] = [
@@ -358,10 +358,10 @@ class MimeDetectorTest extends TestCaseImplementation
                 ];
             }
         }
-        
+
         return [[$files]];
     }
-    
+
     /**
      * Returns an array of all existing test files and their corresponding CRC32b hashes.
      *
