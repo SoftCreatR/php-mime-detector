@@ -39,9 +39,7 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testSetFileThrowsException(): void
     {
         $this->expectException(MimeDetectorException::class);
-
-        $mimeDetector = MimeDetector::getInstance();
-        $mimeDetector->setFile('nonexistant.file');
+        $this->getInstance()->setFile('nonexistant.file');
     }
 
     /**
@@ -91,10 +89,7 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testGetFileTypeReturnEmptyArrayWithUnknownFileType(): void
     {
-        $mimeDetector = $this->getInstance();
-        $mimeDetector->setFile(__FILE__);
-
-        self::assertEmpty($mimeDetector->getFileType());
+        self::assertEmpty($this->getInstance()->setFile(__FILE__)->getFileType());
     }
 
     /**
@@ -105,11 +100,8 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testGetFileType(array $testFiles): void
     {
-        $mimeDetector = $this->getInstance();
-
         foreach ($testFiles as $testFile) {
-            $mimeDetector->setFile($testFile['file']);
-            $fileData = $mimeDetector->getFileType();
+            $fileData = $this->getInstance()->setFile($testFile['file'])->getFileType();
 
             self::assertSame($testFile['ext'], $fileData['ext']);
         }
@@ -124,10 +116,7 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testGetFileExtensionEmpty(): void
     {
-        $mimeDetector = $this->getInstance();
-        $mimeDetector->setFile(__FILE__);
-
-        self::assertEmpty($mimeDetector->getFileExtension());
+        self::assertEmpty($this->getInstance()->setFile(__FILE__)->getFileExtension());
     }
 
     /**
@@ -138,12 +127,8 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testGetFileExtension(array $testFiles): void
     {
-        $mimeDetector = $this->getInstance();
-
         foreach ($testFiles as $testFile) {
-            $mimeDetector->setFile($testFile['file']);
-
-            self::assertSame($testFile['ext'], $mimeDetector->getFileExtension());
+            self::assertSame($testFile['ext'], $this->getInstance()->setFile($testFile['file'])->getFileExtension());
         }
     }
 
@@ -156,10 +141,7 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testGetMimeTypeEmpty(): void
     {
-        $mimeDetector = $this->getInstance();
-        $mimeDetector->setFile(__FILE__);
-
-        self::assertEmpty($mimeDetector->getMimeType());
+        self::assertEmpty($this->getInstance()->setFile(__FILE__)->getMimeType());
     }
 
     /**
@@ -170,13 +152,9 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testGetMimeType(array $testFiles): void
     {
-        $mimeDetector = $this->getInstance();
-
         foreach ($testFiles as $testFile) {
-            $mimeDetector->setFile($testFile['file']);
-
             // we don't know the mime type of our test file, so we'll just check, if any mimetype has been detected
-            self::assertNotEmpty($mimeDetector->getMimeType());
+            self::assertNotEmpty($this->getInstance()->setFile($testFile['file'])->getMimeType());
         }
     }
 
@@ -188,16 +166,32 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testGetFontAwesomeIcon(array $fontAwesomeIcons): void
     {
-        $mimeDetector = $this->getInstance();
-
         foreach ($fontAwesomeIcons as $mimeType => $params) {
-            self::assertSame('fa ' . $params[0], $mimeDetector->getFontAwesomeIcon($mimeType, $params[1]));
+            self::assertSame('fa ' . $params[0], $this->getInstance()->getFontAwesomeIcon($mimeType, $params[1]));
         }
 
-        $mimeDetector->setFile(__FILE__);
+        $this->getInstance()->setFile(__FILE__);
 
-        self::assertSame('fa fa-file-o', $mimeDetector->getFontAwesomeIcon());
-        self::assertSame('fa fa-file-o fa-fw', $mimeDetector->getFontAwesomeIcon('', true));
+        self::assertSame('fa fa-file-o', $this->getInstance()->getFontAwesomeIcon());
+        self::assertSame('fa fa-file-o fa-fw', $this->getInstance()->getFontAwesomeIcon('', true));
+    }
+
+    /**
+     * Test, if `getHash` returns the crc32b hash for this test class.
+     *
+     * @return void
+     */
+    public function testGetHashFile(): void
+    {
+        self::assertNotFalse($this->getInstance()->getHash(__FILE__));
+    }
+    
+    /**
+     * @return void
+     */
+    public function testGetHash(): void
+    {
+        self::assertSame('569121d1', $this->getInstance()->getHash('php'));
     }
 
     /**
@@ -205,9 +199,7 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testToBytes(): void
     {
-        $mimeDetector = $this->getInstance();
-
-        self::assertEquals([112, 104, 112], $mimeDetector->toBytes('php'));
+        self::assertEquals([112, 104, 112], $this->getInstance()->toBytes('php'));
     }
 
     /**
@@ -335,7 +327,7 @@ class MimeDetectorTest extends TestCaseImplementation
             if ($file->isFile() && $file->getBasename() !== '.git') {
                 $files[$file->getBasename()] = [
                     'file' => $file->getPathname(),
-                    'hash' => hash_file('crc32b', $file->getPathname()),
+                    'hash' => $this->getInstance()->getHash($file->getPathname()),
                     'ext' => $file->getExtension()
                 ];
             }

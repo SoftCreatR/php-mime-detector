@@ -76,6 +76,8 @@ class MimeDetector
     /**
      * Singletons do not support a public constructor. Override init() if
      * you need to initialize components on creation.
+     *
+     * @codeCoverageIgnore
      */
     final protected function __construct()
     {
@@ -84,6 +86,8 @@ class MimeDetector
 
     /**
      * Called within __construct(), override if necessary.
+     *
+     * @codeCoverageIgnore
      */
     protected function init()
     {
@@ -116,9 +120,11 @@ class MimeDetector
      */
     public static function getInstance(): MimeDetector
     {
+        // @codeCoverageIgnoreStart
         if (empty(self::$instance)) {
             self::$instance = new MimeDetector();
         }
+        // @codeCoverageIgnoreEnd
 
         return self::$instance;
     }
@@ -127,16 +133,16 @@ class MimeDetector
      * Setter for the file to be checked.
      *
      * @param   string  $filePath
-     * @return  void
+     * @return  MimeDetector
      * @throws  MimeDetectorException
      */
-    public function setFile(string $filePath): void
+    public function setFile(string $filePath): MimeDetector
     {
         if (!file_exists($filePath)) {
             throw new MimeDetectorException("File '" . $filePath . "' does not exist.");
         }
 
-        $fileHash = hash_file('crc32b', $filePath);
+        $fileHash = $this->getHash($filePath);
 
         if ($this->fileHash !== $fileHash) {
             $this->byteCache = [];
@@ -146,6 +152,8 @@ class MimeDetector
 
             $this->createByteCache();
         }
+        
+        return $this;
     }
 
     /**
@@ -1076,6 +1084,21 @@ class MimeDetector
         }
 
         return 'fa ' . $iconClass . ($fixedWidth ? ' fa-fw' : '');
+    }
+
+    /**
+     * Returns the crc32b hash of a given string.
+     *
+     * @param   string  $str
+     * @return  string
+     */
+    public function getHash(string $str): string
+    {
+        if (file_exists($str)) {
+            return hash_file('crc32b', $str);
+        }
+
+        return hash('crc32b', $str);
     }
 
     /**
