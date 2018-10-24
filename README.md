@@ -27,7 +27,6 @@ Short answer: I have just little experience in unit testing. This project was a 
 ## Requirements
 
 -   PHP 7.1 or newer
--   HTTP server with PHP support (eg: Apache, Nginx, Caddy)
 -   [Composer](https://getcomposer.org)
 
 ## Installation
