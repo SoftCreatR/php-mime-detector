@@ -23,7 +23,7 @@
         "issues": "https://github.com/SoftCreatR/php-mime-detector/issues",
         "forum": "https://support.softcreatr.com"
     },
-    "version": "2.0.1",
+    "version": "3.0.0",
     "require": {
         "php": ">=7.1.0"
     },

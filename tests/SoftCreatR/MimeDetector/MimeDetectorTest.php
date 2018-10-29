@@ -19,7 +19,7 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function getInstance(): MimeDetector
     {
-        return MimeDetector::getInstance();
+        return new MimeDetector();
     }
 
     /**
@@ -57,6 +57,7 @@ class MimeDetectorTest extends TestCaseImplementation
 
             self::assertAttributeNotEmpty('byteCache', $mimeDetector);
             self::assertAttributeGreaterThanOrEqual(1, 'byteCacheLen', $mimeDetector);
+            self::assertAttributeEquals(4096, 'maxByteCacheLen', $mimeDetector);
             self::assertAttributeSame($testFile['file'], 'file', $mimeDetector);
             self::assertAttributeSame($testFile['hash'], 'fileHash', $mimeDetector);
         }
@@ -185,7 +186,7 @@ class MimeDetectorTest extends TestCaseImplementation
     {
         self::assertNotFalse($this->getInstance()->getHash(__FILE__));
     }
-    
+
     /**
      * @return void
      */
@@ -200,6 +201,46 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testToBytes(): void
     {
         self::assertEquals([112, 104, 112], $this->getInstance()->toBytes('php'));
+    }
+
+    /**
+     * Test, if `setByteCacheMaxLength` throws an exception, when being called too late.
+     *
+     * @return  void
+     * @throws  MimeDetectorException
+     */
+    public function testSetByteCacheMaxLengthThrowsExceptionWrongOrder(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->getInstance()->setFile(__FILE__)->setByteCacheMaxLength(123);
+    }
+
+    /**
+     * Test, if `setByteCacheMaxLength` throws an exception, if the given max length is too small.
+     *
+     * @return  void
+     * @throws  MimeDetectorException
+     */
+    public function testSetByteCacheMaxLengthThrowsExceptionTooSmall(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->getInstance()->setByteCacheMaxLength(3);
+    }
+
+    /**
+     * @return  void
+     * @throws  MimeDetectorException
+     */
+    public function testSetByteCacheMaxLength(): void
+    {
+        $mimeDetector = $this->getInstance();
+
+        $mimeDetector->setByteCacheMaxLength(5);
+        $mimeDetector->setFile(__FILE__);
+
+        self::assertAttributeEquals(5, 'maxByteCacheLen', $mimeDetector);
+        self::assertAttributeEquals(5, 'byteCacheLen', $mimeDetector);
+        self::assertAttributeSame($mimeDetector->toBytes('<?php'), 'byteCache', $mimeDetector);
     }
 
     /**

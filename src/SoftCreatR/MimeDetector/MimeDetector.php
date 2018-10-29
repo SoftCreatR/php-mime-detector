@@ -13,13 +13,6 @@ namespace SoftCreatR\MimeDetector;
 class MimeDetector
 {
     /**
-     * Current instance
-     *
-     * @var MimeDetector
-     */
-    private static $instance;
-
-    /**
      * Cached first X bytes of the given file
      *
      * @var array
@@ -32,6 +25,13 @@ class MimeDetector
      * @var integer
      */
     private $byteCacheLen = 0;
+
+    /**
+     * Maximum number of bytes to cache
+     *
+     * @var integer
+     */
+    private $maxByteCacheLen = 0;
 
     /**
      * Path to the given file
@@ -74,59 +74,10 @@ class MimeDetector
     ];
 
     /**
-     * Singletons do not support a public constructor. Override init() if
-     * you need to initialize components on creation.
-     *
-     * @codeCoverageIgnore
+     * Create a new MimeDetector object.
      */
-    final protected function __construct()
+    public function __construct()
     {
-        $this->init();
-    }
-
-    /**
-     * Called within __construct(), override if necessary.
-     *
-     * @codeCoverageIgnore
-     */
-    protected function init()
-    {
-    }
-
-    /**
-     * Object cloning is disallowed.
-     *
-     * @codeCoverageIgnore
-     */
-    final protected function __clone()
-    {
-    }
-
-    /**
-     * Object serializing is disallowed.
-     *
-     * @throws MimeDetectorException
-     * @codeCoverageIgnore
-     */
-    final public function __sleep()
-    {
-        throw new MimeDetectorException('Serializing of Singletons is not allowed');
-    }
-
-    /**
-     * Returns an unique instance of the MimeDetector class.
-     *
-     * @return  MimeDetector
-     */
-    public static function getInstance(): MimeDetector
-    {
-        // @codeCoverageIgnoreStart
-        if (empty(self::$instance)) {
-            self::$instance = new MimeDetector();
-        }
-        // @codeCoverageIgnoreEnd
-
-        return self::$instance;
     }
 
     /**
@@ -136,7 +87,7 @@ class MimeDetector
      * @return  MimeDetector
      * @throws  MimeDetectorException
      */
-    public function setFile(string $filePath): MimeDetector
+    public function setFile(string $filePath): self
     {
         if (!file_exists($filePath)) {
             throw new MimeDetectorException("File '" . $filePath . "' does not exist.");
@@ -147,6 +98,7 @@ class MimeDetector
         if ($this->fileHash !== $fileHash) {
             $this->byteCache = [];
             $this->byteCacheLen = 0;
+            $this->maxByteCacheLen = $this->maxByteCacheLen ?: 4096;
             $this->file = $filePath;
             $this->fileHash = $fileHash;
 
@@ -249,12 +201,11 @@ class MimeDetector
         // Need to be before the `zip` check
         if ($this->checkForBytes([0x50, 0x4B, 0x3, 0x4])) {
             if ($this->checkForBytes([
-                    0x6D, 0x69, 0x6D, 0x65, 0x74, 0x79, 0x70,
-                    0x65, 0x61, 0x70, 0x70, 0x6C, 0x69, 0x63,
-                    0x61, 0x74, 0x69, 0x6F, 0x6E, 0x2F, 0x65,
-                    0x70, 0x75, 0x62, 0x2B, 0x7A, 0x69, 0x70
-                ], 30)
-            ) {
+                0x6D, 0x69, 0x6D, 0x65, 0x74, 0x79, 0x70,
+                0x65, 0x61, 0x70, 0x70, 0x6C, 0x69, 0x63,
+                0x61, 0x74, 0x69, 0x6F, 0x6E, 0x2F, 0x65,
+                0x70, 0x75, 0x62, 0x2B, 0x7A, 0x69, 0x70
+            ], 30)) {
                 return [
                     'ext' => 'epub',
                     'mime' => 'application/epub+zip'
@@ -1112,6 +1063,30 @@ class MimeDetector
     {
         return array_values(unpack('C*', $str));
     }
+    
+    /**
+     * Allows to define the max byte cache length for a file. This can be useful in cases,
+     * when you expect files, where the magic number should be found within the first X bytes.
+     * However, the byte cache should have at least a length of 4 for a proper detection.
+     *
+     * @param   int  $maxLength
+     * @return  MimeDetector
+     * @throws  MimeDetectorException
+     */
+    public function setByteCacheMaxLength(int $maxLength): self
+    {
+        if ($this->byteCacheLen > 0) {
+            throw new MimeDetectorException('setByteCacheMaxLength() must be called before setFile().');
+        }
+
+        if ($maxLength < 4) {
+            throw new MimeDetectorException('Maximum byte cache length must not be smaller than 4.');
+        }
+        
+        $this->maxByteCacheLen = $maxLength;
+        
+        return $this;
+    }
 
     /**
      * Checks the byte sequence of a given string.
@@ -1181,7 +1156,8 @@ class MimeDetector
     }
 
     /**
-     * Caches the first 4096 bytes of the given file, so we don't have to read the whole file on every iteration.
+     * Caches the first X bytes (4096 by default) of the given file,
+     * so we don't have to read the whole file on every iteration.
      *
      * @return  void
      * @throws  MimeDetectorException
@@ -1197,7 +1173,7 @@ class MimeDetector
         }
 
         $handle = fopen($this->file, 'rb');
-        $data = fread($handle, 4096);
+        $data = fread($handle, $this->maxByteCacheLen);
         fclose($handle);
 
         foreach (str_split($data) as $i => $char) {

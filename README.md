@@ -29,6 +29,8 @@ Short answer: I have just little experience in unit testing. This project was a 
 -   PHP 7.1 or newer
 -   [Composer](https://getcomposer.org)
 
+If you are looking for a solution that works on older PHP versions (5.3.2+), head over to the [oldphp](https://github.com/SoftCreatR/php-mime-detector/tree/oldphp) branch.
+
 ## Installation
 
 Require this package using [Composer](https://getcomposer.org/), in the root directory of your project:
@@ -46,7 +48,7 @@ use SoftCreatR\MimeDetector\MimeDetector;
 use SoftCreatR\MimeDetector\MimeDetectorException;
 
 // create an instance of the MimeDetector
-$mimeDetector = MimeDetector::getInstance();
+$mimeDetector = new MimeDetector();
 
 // set our file to read
 try {
@@ -60,6 +62,19 @@ $fileData = $mimeDetector->getFileType();
 
 // print the result
 echo '<pre>' . print_r($fileData, true) . '</pre>';
+```
+
+Or short:
+
+```php
+use SoftCreatR\MimeDetector\MimeDetector;
+use SoftCreatR\MimeDetector\MimeDetectorException;
+
+try {
+    echo '<pre>' . print_r((new MimeDetector())->setFile('foo.bar')->getFileType(), true) . '</pre>';
+} catch (MimeDetectorException $e) {
+    die('An error occured while trying to load the given file.');
+}
 ```
 
 ## Testing
