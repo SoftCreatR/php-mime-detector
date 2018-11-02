@@ -976,7 +976,7 @@ class MimeDetector
                 'mime' => 'text/html'
             ];
         }
-
+    
         return [];
     }
 
@@ -1036,6 +1036,23 @@ class MimeDetector
         }
 
         return 'fa ' . $iconClass . ($fixedWidth ? ' fa-fw' : '');
+    }
+    
+    /**
+     * Returns the data URI of the given file in base64 format.
+     *
+     * @return  string
+     */
+    public function getBase64DataURI(): string
+    {
+        $fileMimeType = $this->getMimeType();
+        $base64String = base64_encode(file_get_contents($this->file));
+        
+        if (!empty($fileMimeType) && !empty($base64String)) {
+            return 'data:' . $fileMimeType . ';base64,' . $base64String;
+        }
+        
+        return '';
     }
 
     /**

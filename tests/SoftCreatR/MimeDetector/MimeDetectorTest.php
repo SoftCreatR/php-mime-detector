@@ -136,7 +136,6 @@ class MimeDetectorTest extends TestCaseImplementation
     /**
      * Test, if `getMimeType` returns an empty string, if the file type of the provided file cannot be determined.
      *
-     * @dataProvider    provideTestFiles
      * @return          void
      * @throws          MimeDetectorException
      */
@@ -147,7 +146,7 @@ class MimeDetectorTest extends TestCaseImplementation
 
     /**
      * @dataProvider    provideTestFiles
-     * @param           array $testFiles
+     * @param           array   $testFiles
      * @return          void
      * @throws          MimeDetectorException
      */
@@ -161,9 +160,9 @@ class MimeDetectorTest extends TestCaseImplementation
 
     /**
      * @dataProvider    provideFontAwesomeIcons
-     * @param   array   $fontAwesomeIcons
-     * @return  void
-     * @throws  MimeDetectorException
+     * @param           array   $fontAwesomeIcons
+     * @return          void
+     * @throws          MimeDetectorException
      */
     public function testGetFontAwesomeIcon(array $fontAwesomeIcons): void
     {
@@ -175,6 +174,32 @@ class MimeDetectorTest extends TestCaseImplementation
 
         self::assertSame('fa fa-file-o', $this->getInstance()->getFontAwesomeIcon());
         self::assertSame('fa fa-file-o fa-fw', $this->getInstance()->getFontAwesomeIcon('', true));
+    }
+    
+    /**
+     * Test, if `getMimeType` returns an empty string, if the mime type of the provided file cannot be determined.
+     *
+     * @return          void
+     * @throws          MimeDetectorException
+     */
+    public function testGetBase64DataURIReturnsEmptyString(): void
+    {
+        self::assertEmpty($this->getInstance()->setFile(__FILE__)->getBase64DataURI());
+    }
+    
+    /**
+     * @dataProvider    provideSingleTestFile
+     * @param           array $testFile
+     * @return          void
+     * @throws          MimeDetectorException
+     */
+    public function testGetBase64DataURI(array $testFile): void
+    {
+        $mimeDetector = $this->getInstance()->setFile($testFile['file']);
+        $base64String = base64_encode(file_get_contents($testFile['file']));
+        $fileMimeType = $mimeDetector->getMimeType();
+        
+        self::assertSame('data:' . $fileMimeType . ';base64,' . $base64String, $mimeDetector->getBase64DataURI());
     }
 
     /**
@@ -375,6 +400,32 @@ class MimeDetectorTest extends TestCaseImplementation
         }
 
         return [[$files]];
+    }
+    
+    /**
+     * Returns the first test file within the fixtures directory.
+     *
+     * @return array
+     */
+    public function provideSingleTestFile(): array
+    {
+        $fileInfo = [];
+        
+        foreach (new DirectoryIterator(__DIR__ . '/fixtures') as $file) {
+            if (!empty($fileInfo)) {
+                break;
+            }
+            
+            if ($file->isFile() && $file->getBasename() !== '.git') {
+                $fileInfo = [
+                    'file' => $file->getPathname(),
+                    'hash' => $this->getInstance()->getHash($file->getPathname()),
+                    'ext' => $file->getExtension()
+                ];
+            }
+        }
+        
+        return [[$fileInfo]];
     }
 
     /**
