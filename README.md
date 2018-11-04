@@ -24,6 +24,10 @@ __Why are the unit tests so poorly written?__
 
 Short answer: I have just little experience in unit testing. This project was a good training and even if the unit tests could be better: I am proud of my progress :)
 
+## Demo
+
+A demo (based on dev-master) can be found at [WhatTheFile.info](https://www.whatthefile.info).
+
 ## Requirements
 
 -   PHP 7.1 or newer
