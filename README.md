@@ -26,7 +26,7 @@ Short answer: I have just little experience in unit testing. This project was a 
 
 ## Demo
 
-A demo (based on dev-master) can be found at [WhatTheFile.info](https://www.whatthefile.info).
+A demo (based on [dev-master](https://github.com/SoftCreatR/php-mime-detector/archive/master.zip)) can be found at [WhatTheFile.info](https://www.whatthefile.info).
 
 ## Requirements
 
