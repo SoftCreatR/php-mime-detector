@@ -286,9 +286,7 @@ class MimeDetector
             if ($type) {
                 return $type;
             }
-        }
-
-        if ($this->checkForBytes([0x50, 0x4B, 0x3, 0x4])) {
+    
             return [
                 'ext' => 'zip',
                 'mime' => 'application/zip'
@@ -425,6 +423,15 @@ class MimeDetector
                 return [
                     'ext' => 'qcp',
                     'mime' => 'audio/qcelp'
+                ];
+            }
+
+            // animated cursors
+            // mime type might be wrong, but there's not much information about the "correct" one
+            if ($this->checkForBytes([0x41, 0x43, 0x4F, 0x4E], 8)) {
+                return [
+                    'ext' => 'ani',
+                    'mime' => 'application/x-navi-animation'
                 ];
             }
         }
