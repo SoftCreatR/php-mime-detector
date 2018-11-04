@@ -931,6 +931,14 @@ class MimeDetector
             ];
         }
 
+        // unfortunately, this format doesn't have a proper mime type, but it's worth detecting
+        if ($this->checkForBytes([0x73, 0x69, 0x6c, 0x68, 0x6f, 0x75, 0x65, 0x74, 0x74, 0x65, 0x30, 0x35])) {
+            return [
+                'ext' => 'studio3',
+                'mime' => 'application/octet-stream'
+            ];
+        }
+
         // this class is intended to detect binary files, only. But there's nothing wrong in
         // trying to detect text files aswell.
         if ($this->checkString('<?xml ')) {
