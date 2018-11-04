@@ -931,7 +931,21 @@ class MimeDetector
             ];
         }
 
-        // unfortunately, this format doesn't have a proper mime type, but it's worth detecting
+        if ($this->checkForBytes([0x64, 0x6E, 0x73, 0x2E]) || $this->checkForBytes([0x2E, 0x73, 0x6E, 0x64])) {
+            return [
+                'ext' => 'au',
+                'mime' => 'audio/basic'
+            ];
+        }
+    
+        // unfortunately, these formats don't have a proper mime type, but they are worth detecting
+        if ($this->checkForBytes([0x67, 0x33, 0x64, 0x72, 0x65, 0x6D])) {
+            return [
+                'ext' => 'g3drem',
+                'mime' => 'application/octet-stream'
+            ];
+        }
+        
         if ($this->checkForBytes([0x73, 0x69, 0x6c, 0x68, 0x6f, 0x75, 0x65, 0x74, 0x74, 0x65, 0x30, 0x35])) {
             return [
                 'ext' => 'studio3',
