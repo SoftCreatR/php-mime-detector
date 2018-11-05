@@ -786,6 +786,18 @@ class MimeDetector
         }
 
         if ($this->checkForBytes([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])) {
+            // MS Visio
+            if ($this->checkForBytes([
+                    0x56, 0x00, 0x69, 0x00, 0x73,
+                    0x00, 0x69, 0x00, 0x6F, 0x00,
+                    0x44, 0x00, 0x6F, 0x00, 0x63
+            ], 1664)) {
+                return [
+                    'ext' => 'vsd',
+                    'mime' => 'application/vnd.visio'
+                ];
+            }
+            
             return [
                 'ext' => 'msi',
                 'mime' => 'application/x-msi'
@@ -937,7 +949,7 @@ class MimeDetector
                 'mime' => 'audio/basic'
             ];
         }
-    
+
         // unfortunately, these formats don't have a proper mime type, but they are worth detecting
         if ($this->checkForBytes([0x67, 0x33, 0x64, 0x72, 0x65, 0x6D])) {
             return [

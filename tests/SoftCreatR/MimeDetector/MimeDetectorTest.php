@@ -394,7 +394,7 @@ class MimeDetectorTest extends TestCaseImplementation
                 $files[$file->getBasename()] = [
                     'file' => $file->getPathname(),
                     'hash' => $this->getInstance()->getHash($file->getPathname()),
-                    'ext' => $file->getExtension()
+                    'ext' => strtolower($file->getExtension())
                 ];
             }
         }
@@ -420,7 +420,7 @@ class MimeDetectorTest extends TestCaseImplementation
                 $fileInfo = [
                     'file' => $file->getPathname(),
                     'hash' => $this->getInstance()->getHash($file->getPathname()),
-                    'ext' => $file->getExtension()
+                    'ext' => strtolower($file->getExtension())
                 ];
             }
         }
