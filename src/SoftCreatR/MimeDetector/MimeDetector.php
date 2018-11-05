@@ -773,7 +773,7 @@ class MimeDetector
 
         if ($this->checkForBytes([0x1F, 0xA0]) || $this->checkForBytes([0x1F, 0x9D])) {
             return [
-                'ext' => 'Z',
+                'ext' => 'z',
                 'mime' => 'application/x-compress'
             ];
         }
