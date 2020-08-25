@@ -23,14 +23,6 @@ class MimeDetectorTest extends TestCaseImplementation
     }
 
     /**
-     * @return  void
-     */
-    public function testGetInstance(): void
-    {
-        self::assertInstanceOf(MimeDetector::class, $this->getInstance());
-    }
-
-    /**
      * Test, if `setFile` throws an exception, if the provided file does not exist.
      *
      * @return  void
@@ -39,7 +31,7 @@ class MimeDetectorTest extends TestCaseImplementation
     public function testSetFileThrowsException(): void
     {
         $this->expectException(MimeDetectorException::class);
-        $this->getInstance()->setFile('nonexistant.file');
+        $this->getInstance()->setFile('nonexistent.file');
     }
 
     /**
@@ -50,16 +42,15 @@ class MimeDetectorTest extends TestCaseImplementation
      */
     public function testSetFile($testFiles): void
     {
-        $mimeDetector = $this->getInstance();
-
         foreach ($testFiles as $testFile) {
+            $mimeDetector = $this->getInstance();
             $mimeDetector->setFile($testFile['file']);
 
-            self::assertAttributeNotEmpty('byteCache', $mimeDetector);
-            self::assertAttributeGreaterThanOrEqual(1, 'byteCacheLen', $mimeDetector);
-            self::assertAttributeEquals(4096, 'maxByteCacheLen', $mimeDetector);
-            self::assertAttributeSame($testFile['file'], 'file', $mimeDetector);
-            self::assertAttributeSame($testFile['hash'], 'fileHash', $mimeDetector);
+            self::assertNotEmpty($mimeDetector->getByteCache());
+            self::assertGreaterThanOrEqual(1, $mimeDetector->getByteCacheLen());
+            self::assertEquals(4096, $mimeDetector->getByteCacheMaxLength());
+            self::assertSame($testFile['file'], $mimeDetector->getFile());
+            self::assertSame($testFile['hash'], $mimeDetector->getFileHash());
         }
     }
 
@@ -263,9 +254,9 @@ class MimeDetectorTest extends TestCaseImplementation
         $mimeDetector->setByteCacheMaxLength(5);
         $mimeDetector->setFile(__FILE__);
 
-        self::assertAttributeEquals(5, 'maxByteCacheLen', $mimeDetector);
-        self::assertAttributeEquals(5, 'byteCacheLen', $mimeDetector);
-        self::assertAttributeSame($mimeDetector->toBytes('<?php'), 'byteCache', $mimeDetector);
+        self::assertEquals(5, $mimeDetector->getByteCacheMaxLength());
+        self::assertEquals(5, $mimeDetector->getByteCacheLen());
+        self::assertSame($mimeDetector->toBytes('<?php'), $mimeDetector->getByteCache());
     }
 
     /**

@@ -95,10 +95,10 @@ class MimeDetector
 
         $fileHash = $this->getHash($filePath);
 
-        if ($this->fileHash !== $fileHash) {
+        if ($this->getFileHash() !== $fileHash) {
             $this->byteCache = [];
             $this->byteCacheLen = 0;
-            $this->maxByteCacheLen = $this->maxByteCacheLen ?: 4096;
+            $this->maxByteCacheLen = $this->getByteCacheMaxLength() ?: 4096;
             $this->file = $filePath;
             $this->fileHash = $fileHash;
 
@@ -156,10 +156,10 @@ class MimeDetector
         }
 
         // Needs to be before `tif` check
-        if ((
+        if ($this->checkForBytes([0x43, 0x52], 8) && (
                 $this->checkForBytes([0x49, 0x49, 0x2A, 0x0]) ||
                 $this->checkForBytes([0x4D, 0x4D, 0x0, 0x2A])
-            ) && $this->checkForBytes([0x43, 0x52], 8)
+            )
         ) {
             return [
                 'ext' => 'cr2',
@@ -300,11 +300,11 @@ class MimeDetector
             ];
         }
 
-        if ($this->checkForBytes([0x52, 0x61, 0x72, 0x21, 0x1A, 0x7]) &&
+        if (
             (
                 $this->byteCache[6] === 0x0 ||
-                $this->byteCache[6] === 0x1
-            )
+                $this->byteCache[6] === 0x1) &&
+            $this->checkForBytes([0x52, 0x61, 0x72, 0x21, 0x1A, 0x7])
         ) {
             return [
                 'ext' => 'rar',
@@ -458,7 +458,7 @@ class MimeDetector
         }
 
         // Check for MPEG header at different starting offsets
-        for ($offset = 0; ($offset < 2 && $offset < ($this->byteCacheLen - 16)); $offset++) {
+        for ($offset = 0; ($offset < 2 && $offset < ($this->getByteCacheLen() - 16)); $offset++) {
             if ($this->checkForBytes([0x49, 0x44, 0x33], $offset) || // ID3 header
                 $this->checkForBytes([0xFF, 0xE2], $offset, [0xFF, 0xE2]) // MPEG 1 or 2 Layer 3 header
             ) {
@@ -920,6 +920,13 @@ class MimeDetector
                 ];
             }
             // @codeCoverageIgnoreEnd
+            
+            if ($this->checkForBytes(array(0x61, 0x76, 0x69, 0x66), 8)) {
+                return array(
+                    'ext' => 'avif',
+                    'mime' => 'image/avif'
+                );
+            }
         }
 
         if ($this->checkForBytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A])) {
@@ -1097,6 +1104,14 @@ class MimeDetector
     }
 
     /**
+     * @return string
+     */
+    public function getFile(): string
+    {
+        return $this->file;
+    }
+
+    /**
      * Returns the crc32b hash of a given string.
      *
      * @param   string  $str
@@ -1109,6 +1124,14 @@ class MimeDetector
         }
 
         return hash('crc32b', $str);
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileHash(): string
+    {
+        return $this->fileHash;
     }
 
     /**
@@ -1133,7 +1156,7 @@ class MimeDetector
      */
     public function setByteCacheMaxLength(int $maxLength): self
     {
-        if ($this->byteCacheLen > 0) {
+        if ($this->getByteCacheLen() > 0) {
             throw new MimeDetectorException('setByteCacheMaxLength() must be called before setFile().');
         }
 
@@ -1144,6 +1167,14 @@ class MimeDetector
         $this->maxByteCacheLen = $maxLength;
         
         return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getByteCacheMaxLength(): int
+    {
+        return $this->maxByteCacheLen;
     }
 
     /**
@@ -1194,23 +1225,29 @@ class MimeDetector
             return false;
         }
 
-        // make sure we have nummeric indices
+        // make sure we have numeric indices
         $bytes = array_values($bytes);
 
         foreach ($bytes as $i => $byte) {
             if (!empty($mask)) {
-                if (!isset($this->byteCache[$offset + $i]) ||
-                    !isset($mask[$i]) ||
-                    $byte !== ($mask[$i] & $this->byteCache[$offset + $i])
+                if (!isset($this->byteCache[$offset + $i], $mask[$i]) || $byte !== ($mask[$i] & $this->byteCache[$offset + $i])
                 ) {
                     return false;
                 }
-            } elseif (!isset($this->byteCache[$offset + $i]) || $this->byteCache[$offset + $i] != $byte) {
+            } elseif (!isset($this->byteCache[$offset + $i]) || $this->byteCache[$offset + $i] !== $byte) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function getByteCache(): array
+    {
+        return $this->byteCache;
     }
 
     /**
@@ -1231,7 +1268,7 @@ class MimeDetector
         }
 
         $handle = fopen($this->file, 'rb');
-        $data = fread($handle, $this->maxByteCacheLen);
+        $data = fread($handle, $this->getByteCacheMaxLength());
         fclose($handle);
 
         foreach (str_split($data) as $i => $char) {
@@ -1239,5 +1276,13 @@ class MimeDetector
         }
 
         $this->byteCacheLen = count($this->byteCache);
+    }
+
+    /**
+     * @return int
+     */
+    public function getByteCacheLen(): int
+    {
+        return $this->byteCacheLen;
     }
 }
