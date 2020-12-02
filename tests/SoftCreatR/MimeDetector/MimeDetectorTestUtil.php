@@ -1,4 +1,11 @@
 <?php
+
+/**
+ * Mime Detector for PHP.
+ *
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ */
+
 declare(strict_types=1);
 
 namespace SoftCreatR\Tests\MimeDetector;
@@ -9,16 +16,13 @@ use ReflectionMethod;
 use SoftCreatR\MimeDetector\MimeDetector;
 
 /**
- * Utility methods for MimeDetectorTest
+ * Utility methods for MimeDetectorTest.
  */
 class MimeDetectorTestUtil
 {
     /**
      * Returns a private method for testing purposes.
      *
-     * @param   MimeDetector    $obj
-     * @param   string          $methodName
-     * @return  ReflectionMethod
      * @throws  ReflectionException
      */
     public static function getPrivateMethod(MimeDetector $obj, string $methodName): ReflectionMethod
@@ -43,9 +47,6 @@ class MimeDetectorTestUtil
     /**
      * Returns a protected method for testing purposes.
      *
-     * @param   MimeDetector    $obj
-     * @param   string          $methodName
-     * @return  ReflectionMethod
      * @throws  ReflectionException
      */
     public static function getProtectedMethod(MimeDetector $obj, string $methodName): ReflectionMethod
@@ -70,10 +71,6 @@ class MimeDetectorTestUtil
     /**
      * Updates a protected property for testing purposes.
      *
-     * @param   MimeDetector    $obj
-     * @param   string          $propertyName
-     * @param   mixed           $value
-     * @return  void
      * @throws  ReflectionException
      */
     public static function setProtectedProperty(MimeDetector $obj, string $propertyName, $value = null): void
@@ -98,10 +95,6 @@ class MimeDetectorTestUtil
     /**
      * Updates a protected property for testing purposes.
      *
-     * @param   MimeDetector    $obj
-     * @param   string          $propertyName
-     * @param   mixed           $value
-     * @return  void
      * @throws  ReflectionException
      */
     public static function setPrivateProperty(MimeDetector $obj, string $propertyName, $value = null): void

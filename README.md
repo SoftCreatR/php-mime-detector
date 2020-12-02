@@ -1,12 +1,8 @@
-# PHP Mime Detector [![Build Status](https://travis-ci.com/SoftCreatR/php-mime-detector.svg?branch=master)](https://travis-ci.com/SoftCreatR/php-mime-detector) [![Codeship Status for SoftCreatR/php-mime-detector](https://app.codeship.com/projects/9ed81740-b269-0136-7bd2-3ad13aca57c1/status?branch=master)](https://app.codeship.com/projects/310674)
+# PHP Mime Detector
 
-[![CodeFactor](https://www.codefactor.io/repository/github/softcreatr/php-mime-detector/badge)](https://www.codefactor.io/repository/github/softcreatr/php-mime-detector)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/4d404e53d8ec465197a38d9b15c4746e)](https://www.codacy.com/app/SoftCreatR/php-mime-detector?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=SoftCreatR/php-mime-detector&amp;utm_campaign=Badge_Grade)
-[![codecov](https://codecov.io/gh/SoftCreatR/php-mime-detector/branch/master/graph/badge.svg)](https://codecov.io/gh/SoftCreatR/mime-detector)
+Detecting the real type of (binary) files doesn't have to be hard. Checking a file's extension is not reliable and can cause serious security issues.
 
-Detecting the real type of a (binary) file doesn't have to be hard. Checking a file's extension is not reliable and can cause serious security issues.
-
-This package helps you to determine the correct type of a file, by reading it byte for byte (up to 4096) and check for [magic numbers](http://en.wikipedia.org/wiki/Magic_number_(programming)#Magic_numbers_in_files).
+This package helps you to determine the correct type of files, by reading it byte for byte (up to 4096) and check for [magic numbers](http://en.wikipedia.org/wiki/Magic_number_(programming)#Magic_numbers_in_files).
 
 However, this package isn't a replacement for any security software. It just aims to produce less false positives, than a simple extension check would produce.
 
@@ -14,7 +10,7 @@ A list of supported file types can be found on [this Wiki page](https://github.c
 
 __Why a separate class?__
 
-You may wonder, why we don't just rely on extensions like [Fileinfo](https://secure.php.net/manual/en/book.fileinfo.php)? First off all, a short background story:
+You may wonder why we don't just rely on extensions like [Fileinfo](https://secure.php.net/manual/en/book.fileinfo.php)? First off all, a short background story:
 
 We are building extensions and applications for an Open Source PHP Framework, thus we are creating web software for the masses. Many of our customers and/or users of our free products are on shared hosting without any possibility to install or manage installed PHP extensions. So our goal is to develop solutions with as few dependencies as necessary, but with as much functionality as possible.
 
@@ -58,7 +54,7 @@ $mimeDetector = new MimeDetector();
 try {
     $mimeDetector->setFile('foo.bar');
 } catch (MimeDetectorException $e) {
-    die('An error occured while trying to load the given file.');
+    die('An error occurred while trying to load the given file.');
 }
 
 // try to determine it's mime type and the correct file extension
@@ -77,7 +73,7 @@ use SoftCreatR\MimeDetector\MimeDetectorException;
 try {
     echo '<pre>' . print_r((new MimeDetector())->setFile('foo.bar')->getFileType(), true) . '</pre>';
 } catch (MimeDetectorException $e) {
-    die('An error occured while trying to load the given file.');
+    die('An error occurred while trying to load the given file.');
 }
 ```
 
@@ -110,15 +106,10 @@ When done, perform a `composer install` and run PHPUnit as described above.
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
-When addding new detections, please make sure to provide at least one sample file.
+When adding new detections, please make sure to provide at least one sample file.
 
 ## License
 
-[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+[ISC](LICENSE.md)
 
 Free Software, Hell Yeah!
-
-## Support on BMC
-Hey! Help us out with some cups of :coffee:!
-
-[![BMC](https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-2.svg)](https://www.buymeacoff.ee/softcreatr)
