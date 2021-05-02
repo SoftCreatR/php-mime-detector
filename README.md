@@ -26,7 +26,7 @@ A demo (based on [dev-master](https://github.com/SoftCreatR/php-mime-detector/ar
 
 ## Requirements
 
--   PHP 7.1 or newer
+-   PHP 7.2 or newer
 -   [Composer](https://getcomposer.org)
 
 If you are looking for a solution that works on older PHP versions (5.3.2+), head over to the [oldphp](https://github.com/SoftCreatR/php-mime-detector/tree/oldphp) branch.
