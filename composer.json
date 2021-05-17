@@ -21,7 +21,7 @@
     }
   ],
   "require": {
-    "php": ">=7.2.0"
+    "php": ">=7.1.0"
   },
   "conflict": {
     "phpunit/phpunit": "<8.0 || >= 10.0"

@@ -103,8 +103,6 @@ class MimeDetector
      * Setter for the file to be checked.
      *
      * @throws  MimeDetectorException
-     *
-     * @return  MimeDetector
      */
     public function setFile(string $filePath): self
     {
@@ -1175,8 +1173,6 @@ class MimeDetector
      * However, the byte cache should have at least a length of 4 for a proper detection.
      *
      * @throws  MimeDetectorException
-     *
-     * @return  MimeDetector
      */
     public function setByteCacheMaxLength(int $maxLength): self
     {
