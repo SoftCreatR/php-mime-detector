@@ -832,6 +832,19 @@ class MimeDetector
                 ];
             }
 
+            /**
+             * Microsoft Office Excel, according to this document @link https://www.garykessler.net/library/file_sigs.html
+             */
+            if (
+                $this->checkForBytes([0x09, 0x08, 0x10, 0x00, 0x00, 0x06, 0x05, 0x00], 2048)
+                || $this->checkForBytes([0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], 512)
+            ) {
+                return [
+                    'ext' => 'xls',
+                    'mime' => 'application/vnd.ms-excel'
+                ];
+            }
+
             return [
                 'ext' => 'msi',
                 'mime' => 'application/x-msi'
