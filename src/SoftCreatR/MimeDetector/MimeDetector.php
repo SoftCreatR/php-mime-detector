@@ -834,7 +834,7 @@ class MimeDetector
 
             /**
              * Microsoft Office Excel, according to this document
-             * 
+             *
              * @link https://www.garykessler.net/library/file_sigs.html
              */
             if (
