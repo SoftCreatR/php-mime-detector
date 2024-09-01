@@ -13,10 +13,9 @@ namespace SoftCreatR\Tests\MimeDetector;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
-use SoftCreatR\MimeDetector\MimeDetector;
 
 /**
- * Utility methods for MimeDetectorTest.
+ * Utility methods for testing purposes.
  */
 class MimeDetectorTestUtil
 {
@@ -25,7 +24,7 @@ class MimeDetectorTestUtil
      *
      * @throws  ReflectionException
      */
-    public static function getPrivateMethod(MimeDetector $obj, string $methodName): ReflectionMethod
+    public static function getPrivateMethod($obj, string $methodName): ReflectionMethod
     {
         $class = new ReflectionClass($obj);
 
@@ -34,10 +33,6 @@ class MimeDetectorTestUtil
         }
 
         $method = $class->getMethod($methodName);
-
-        if (!$method->isPrivate()) {
-            throw new ReflectionException('Method ' . $methodName . ' is not private.');
-        }
 
         $method->setAccessible(true);
 
@@ -49,7 +44,7 @@ class MimeDetectorTestUtil
      *
      * @throws  ReflectionException
      */
-    public static function getProtectedMethod(MimeDetector $obj, string $methodName): ReflectionMethod
+    public static function getProtectedMethod(object $obj, string $methodName): ReflectionMethod
     {
         $class = new ReflectionClass($obj);
 
@@ -73,7 +68,7 @@ class MimeDetectorTestUtil
      *
      * @throws  ReflectionException
      */
-    public static function setProtectedProperty(MimeDetector $obj, string $propertyName, $value = null): void
+    public static function setProtectedProperty(object $obj, string $propertyName, $value = null): void
     {
         $class = new ReflectionClass($obj);
 
@@ -93,11 +88,11 @@ class MimeDetectorTestUtil
     }
 
     /**
-     * Updates a protected property for testing purposes.
+     * Updates a private property for testing purposes.
      *
      * @throws  ReflectionException
      */
-    public static function setPrivateProperty(MimeDetector $obj, string $propertyName, $value = null): void
+    public static function setPrivateProperty($obj, string $propertyName, $value = null): void
     {
         $class = new ReflectionClass($obj);
 
@@ -106,13 +101,7 @@ class MimeDetectorTestUtil
         }
 
         $property = $class->getProperty($propertyName);
-
-        if (!$property->isPrivate()) {
-            throw new ReflectionException('Property ' . $propertyName . ' is not private.');
-        }
-
         $property->setAccessible(true);
         $property->setValue($obj, $value);
-        $property->setAccessible(false);
     }
 }

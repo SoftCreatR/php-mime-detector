@@ -17,4 +17,5 @@ use Exception;
  */
 class MimeDetectorException extends Exception
 {
+    // ...
 }

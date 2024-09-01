@@ -4,5 +4,6 @@ composer.lock
 .idea
 phpunit.xml
 .phpunit.result.cache
+/.phpunit.cache
 .phpcs-cache
 .php_cs.cache
