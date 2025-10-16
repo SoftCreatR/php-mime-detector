@@ -40,6 +40,34 @@ class ByteCacheHandlerTest extends TestCase
         new ByteCacheHandler('');
     }
 
+    public function testConstructorThrowsExceptionWhenStreamCannotBeOpened(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->expectExceptionMessage("is not readable");
+
+        \stream_wrapper_register('byte-cache-open-failure', ByteCacheOpenFailureStream::class);
+
+        try {
+            new ByteCacheHandler('byte-cache-open-failure://resource');
+        } finally {
+            \stream_wrapper_unregister('byte-cache-open-failure');
+        }
+    }
+
+    public function testConstructorThrowsExceptionWhenReadFails(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->expectExceptionMessage("is not readable");
+
+        \stream_wrapper_register('byte-cache-read-failure', ByteCacheReadFailureStream::class);
+
+        try {
+            new ByteCacheHandler('byte-cache-read-failure://resource');
+        } finally {
+            \stream_wrapper_unregister('byte-cache-read-failure');
+        }
+    }
+
     /**
      * @throws MimeDetectorException
      */
@@ -122,6 +150,17 @@ class ByteCacheHandlerTest extends TestCase
     /**
      * @throws MimeDetectorException
      */
+    public function testCheckForBytesWithMatchingMask(): void
+    {
+        $byteCacheHandler = new ByteCacheHandler($this->testFile);
+
+        // Using an all-bits mask should behave the same as a direct comparison.
+        $this->assertTrue($byteCacheHandler->checkForBytes([84, 104, 105, 115], 0, [255, 255, 255, 255]));
+    }
+
+    /**
+     * @throws MimeDetectorException
+     */
     public function testCheckForBytesWithInsufficientByteCache(): void
     {
         $byteCacheHandler = new ByteCacheHandler($this->testFile);
@@ -129,9 +168,7 @@ class ByteCacheHandlerTest extends TestCase
         // Truncate the byte cache to force the `!isset` condition to trigger.
         $reflection = new ReflectionClass($byteCacheHandler);
         $property = $reflection->getProperty('byteCache');
-        $property->setAccessible(true);
         $property->setValue($byteCacheHandler, [115, 116]); // Setting a shorter byte cache.
-        $property->setAccessible(false);
 
         $this->assertFalse($byteCacheHandler->checkForBytes([115, 116, 114])); // This should now fail.
     }
@@ -157,9 +194,7 @@ class ByteCacheHandlerTest extends TestCase
         // Manually clear the byteCache property to simulate an empty byte cache.
         $reflection = new ReflectionClass($byteCacheHandler);
         $property = $reflection->getProperty('byteCache');
-        $property->setAccessible(true);
         $property->setValue($byteCacheHandler, []); // Empty the byte cache.
-        $property->setAccessible(false);
 
         $this->assertFalse($byteCacheHandler->checkForBytes([115, 116, 114])); // This should now fail.
     }
@@ -175,6 +210,16 @@ class ByteCacheHandlerTest extends TestCase
 
         // Adjusted the expected offset for "string" to 15
         $this->assertEquals(15, $byteCacheHandler->searchForBytes([115, 116, 114, 105, 110, 103])); // "string"
+    }
+
+    /**
+     * @throws MimeDetectorException
+     */
+    public function testSearchForBytesReturnsCorrectOffsetWithMask(): void
+    {
+        $byteCacheHandler = new ByteCacheHandler($this->testFile);
+
+        $this->assertEquals(0, $byteCacheHandler->searchForBytes([84, 104, 105, 115], 0, [255, 255, 255, 255]));
     }
 
     /**
@@ -216,4 +261,86 @@ class ByteCacheHandlerTest extends TestCase
 
         $this->assertEquals([84, 104, 105, 115], $byteCacheHandler->toBytes('This')); // "This"
     }
+
+    /**
+     * @throws MimeDetectorException
+     */
+    public function testGetByteReturnsExpectedValues(): void
+    {
+        $byteCacheHandler = new ByteCacheHandler($this->testFile);
+
+        $this->assertSame(84, $byteCacheHandler->getByte(0));
+        $this->assertNull($byteCacheHandler->getByte(999));
+    }
 }
+
+// phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses, PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
+final class ByteCacheOpenFailureStream
+{
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$opened_path): bool
+    {
+        return false;
+    }
+
+    public function stream_stat(): array
+    {
+        return [
+            'mode' => 0100644,
+            'size' => 0,
+            'mtime' => \time(),
+            'atime' => \time(),
+            'ctime' => \time(),
+        ];
+    }
+
+    public function url_stat(string $path, int $flags): array
+    {
+        return $this->stream_stat();
+    }
+}
+
+final class ByteCacheReadFailureStream
+{
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$opened_path): bool
+    {
+        return true;
+    }
+
+    public function stream_read(int $count)
+    {
+        return false;
+    }
+
+    public function stream_eof(): bool
+    {
+        return true;
+    }
+
+    public function stream_close(): void
+    {
+        // ...
+    }
+
+    public function stream_stat(): array
+    {
+        return [
+            'mode' => 0100644,
+            'size' => 0,
+            'mtime' => \time(),
+            'atime' => \time(),
+            'ctime' => \time(),
+        ];
+    }
+
+    public function url_stat(string $path, int $flags): array
+    {
+        return $this->stream_stat();
+    }
+}
+
+// phpcs:enable

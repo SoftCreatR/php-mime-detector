@@ -10,6 +10,9 @@ declare(strict_types=1);
 
 namespace SoftCreatR\MimeDetector;
 
+/**
+ * Reads a file into an internal byte cache to optimise signature lookups.
+ */
 class ByteCacheHandler
 {
     private array $byteCache = [];
@@ -26,14 +29,30 @@ class ByteCacheHandler
         $this->createByteCache();
     }
 
+    /**
+     * Return the cached byte data.
+     *
+     * @return list<int>
+     */
     public function getByteCache(): array
     {
         return $this->byteCache;
     }
 
+    /**
+     * Length of the cached byte data.
+     */
     public function getByteCacheLen(): int
     {
         return $this->byteCacheLen;
+    }
+
+    /**
+     * Fetch a single byte by offset.
+     */
+    public function getByte(int $offset): ?int
+    {
+        return $this->byteCache[$offset] ?? null;
     }
 
     /**
@@ -42,11 +61,15 @@ class ByteCacheHandler
     public function setMaxByteCacheLen(int $maxLength): void
     {
         if ($maxLength < 4) {
-            throw new MimeDetectorException('Maximum byte cache length must not be smaller than 4.');
+            throw MimeDetectorException::invalidByteCacheLength($maxLength);
         }
+
         $this->maxByteCacheLen = $maxLength;
     }
 
+    /**
+     * Retrieve the configured maximum cache length.
+     */
     public function getMaxByteCacheLen(): int
     {
         return $this->maxByteCacheLen;
@@ -57,13 +80,22 @@ class ByteCacheHandler
      */
     private function createByteCache(): void
     {
-        if (empty($this->file)) {
-            throw new MimeDetectorException('No file provided.');
+        if ($this->file === '') {
+            throw MimeDetectorException::missingFilePath();
         }
 
-        $handle = \fopen($this->file, 'rb');
-        $data = \fread($handle, $this->maxByteCacheLen);
+        $handle = @\fopen($this->file, 'rb');
+
+        if ($handle === false) {
+            throw MimeDetectorException::fileNotReadable($this->file);
+        }
+
+        $data = @\fread($handle, $this->maxByteCacheLen);
         \fclose($handle);
+
+        if ($data === false) {
+            throw MimeDetectorException::fileNotReadable($this->file);
+        }
 
         foreach (\str_split($data) as $i => $char) {
             $this->byteCache[$i] = \ord($char);
@@ -72,6 +104,10 @@ class ByteCacheHandler
         $this->byteCacheLen = \count($this->byteCache);
     }
 
+    /**
+     * @param list<int> $bytes
+     * @param list<int> $mask
+     */
     public function checkForBytes(array $bytes, int $offset = 0, array $mask = []): bool
     {
         if (empty($bytes) || empty($this->byteCache)) {
@@ -94,6 +130,10 @@ class ByteCacheHandler
         return true;
     }
 
+    /**
+     * @param list<int> $bytes
+     * @param list<int> $mask
+     */
     public function searchForBytes(array $bytes, int $offset = 0, array $mask = []): int
     {
         $limit = $this->byteCacheLen - \count($bytes);
@@ -112,6 +152,11 @@ class ByteCacheHandler
         return $this->checkForBytes($this->toBytes($str), $offset);
     }
 
+    /**
+     * Convert the provided string into a list of byte values.
+     *
+     * @return list<int>
+     */
     public function toBytes(string $str): array
     {
         return \array_values(\unpack('C*', $str));

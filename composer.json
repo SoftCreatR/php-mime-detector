@@ -1,15 +1,15 @@
 {
   "name": "softcreatr/php-mime-detector",
-  "description": "Mime Detector Decoder",
+  "description": "Modern, extensible MIME type detector for PHP",
+  "license": "ISC",
   "keywords": [
     "Mime",
     "Mime Type",
     "File Type",
-    "Magic Number"
+    "Magic Number",
+    "Detector",
+    "Extension Lookup"
   ],
-  "homepage": "https://1-2.dev",
-  "version": "4.0.0",
-  "license": "ISC",
   "authors": [
     {
       "name": "Sascha Greuel",
@@ -20,19 +20,23 @@
       "email": "morik@softcreatr.de"
     }
   ],
+  "homepage": "https://1-2.dev",
+  "support": {
+    "email": "hello@1-2.dev",
+    "issues": "https://github.com/SoftCreatR/php-mime-detector/issues",
+    "source": "https://github.com/SoftCreatR/php-mime-detector"
+  },
   "require": {
-    "php": ">=8.1.0"
+    "php": ">=8.1.0",
+    "ext-ctype": "*"
   },
   "require-dev": {
     "phpunit/phpunit": ">=10.0",
     "roave/security-advisories": "dev-latest",
-    "squizlabs/php_codesniffer": "^3.7"
+    "squizlabs/php_codesniffer": "^3.10"
   },
-  "config": {
-    "optimize-autoloader": true,
-    "preferred-install": "dist",
-    "sort-packages": true
-  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
   "autoload": {
     "psr-4": {
       "SoftCreatR\\MimeDetector\\": "src/SoftCreatR/MimeDetector"
@@ -43,16 +47,14 @@
       "SoftCreatR\\Tests\\MimeDetector\\": "tests/SoftCreatR/MimeDetector"
     }
   },
-  "minimum-stability": "stable",
-  "prefer-stable": true,
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
   "scripts": {
     "cs-check": "phpcs",
     "cs-fix": "phpcbf",
     "test": "phpunit"
-  },
-  "support": {
-    "email": "hello@1-2.dev",
-    "issues": "https://github.com/SoftCreatR/php-mime-detector/issues",
-    "source": "https://github.com/SoftCreatR/php-mime-detector"
   }
 }

@@ -1,37 +1,35 @@
 # PHP Mime Detector
 
-Detecting the real type of (binary) files doesn't have to be difficult. Checking a file's extension is not reliable and can lead to serious security issues.
+A modern, extensible MIME type detector for PHP that analyses the actual bytes
+of a file instead of trusting its extension. The detector ships with a modular
+pipeline of signature matchers and a bidirectional repository of MIME type ↔
+extension mappings so you can integrate it into security-sensitive workflows.
 
-This package helps you determine the correct type of files by reading them byte by byte (up to 4096 bytes) and checking for [magic numbers](http://en.wikipedia.org/wiki/Magic_number_(programming)#Magic_numbers_in_files).
+## Features
 
-However, this package isn't a replacement for any security software. It simply aims to produce fewer false positives than a simple extension check would.
-
-A list of supported file types can be found on [this Wiki page](https://github.com/SoftCreatR/php-mime-detector/wiki/Supported-file-types).
-
-## Why a Separate Class?
-
-You may wonder why we don't just rely on extensions like [Fileinfo](https://www.php.net/manual/en/book.fileinfo.php). Here's a brief background:
-
-We develop extensions and applications for an Open Source PHP Framework, creating web software for the masses. Many of our customers and users of our free products are on shared hosting without any ability to install or manage PHP extensions. Therefore, our goal is to develop solutions with minimal dependencies while providing as much functionality as possible.
-
-When developing a solution that allows people to convert HEIF/HEIC files to a more "standardized" format (using our own external API), we had trouble detecting these files because this format isn't widely recognized by most web servers. Since checking the file extension isn't reliable, we needed to find a reusable solution that works for most of our clients. This led to the creation of our Mime Detector, based on magic number checks.
-
-## Requirements
-
-- PHP 8.1 or newer
-- [Composer](https://getcomposer.org)
+- **Real file inspection** – identifies file formats by signature instead of
+  relying on filenames. You can find a list of supported file formats in the
+  [Wiki](https://github.com/SoftCreatR/php-mime-detector/wiki/Supported-file-types).
+- **Composable architecture** – category-specific detectors can be swapped in
+  or extended without touching the core.
+- **Rich lookup helpers** – translate between MIME types and extensions in both
+  directions and enumerate the supported catalogue.
+- **No external dependencies** – runs on any PHP 8.1+ installation without and can take
+  requiring additional, external extensions, or packages, but takes advantage
+  of `ZipArchive` when it is available.
 
 ## Installation
 
-Install this package using [Composer](https://getcomposer.org/) in the root directory of your project:
+Install the package via Composer:
 
 ```bash
 composer require softcreatr/php-mime-detector
 ```
 
-## Usage
+## Quick start
 
-Here is an example of how this package makes it easy to determine the MIME type and corresponding file extension of a given file:
+Detecting the MIME type and the preferred extension for a file is as simple as
+instantiating the façade and calling its helpers:
 
 ```php
 <?php
@@ -42,56 +40,163 @@ use SoftCreatR\MimeDetector\MimeDetectorException;
 require 'vendor/autoload.php';
 
 try {
-    // Create an instance of MimeDetector with the file path
-    $mimeDetector = new MimeDetector('foo.bar');
+    $detector = new MimeDetector(__DIR__ . '/example.png');
 
-    // Get the MIME type and file extension
-    $fileData = [
-        'mime_type' => $mimeDetector->getMimeType(),
-        'file_extension' => $mimeDetector->getFileExtension(),
-        'file_hash' => $mimeDetector->getFileHash(),
-    ];
-
-    // Print the result
-    echo '<pre>' . print_r($fileData, true) . '</pre>';
-} catch (MimeDetectorException $e) {
-    die('An error occurred while trying to load the given file: ' . $e->getMessage());
+    echo $detector->getMimeType();       // image/png
+    echo $detector->getFileExtension();  // png
+    echo $detector->getFileHash();       // crc32 hash of the file contents
+} catch (MimeDetectorException $exception) {
+    // React to unreadable files or unsupported formats.
+    echo $exception->getMessage();
 }
 ```
 
+## Resolving MIME types and extensions
+
+The façade exposes several lookup helpers that do not require a file scan. They
+operate on the shared repository of known mappings:
+
+```php
+$detector = new MimeDetector(__DIR__ . '/example.png');
+
+// Retrieve the canonical extension for a MIME type.
+$extension = $detector->getExtensionForMimeType('image/jpeg'); // "jpg"
+
+// List every MIME type that corresponds to the given extension.
+$mimeTypes = $detector->getMimeTypesForExtension('heic');
+
+// Fetch the complete map as [mimeType => list of extensions].
+$catalogue = $detector->listAllMimeTypes();
+```
+
+Need a data URI? The detector will encode the configured file for you:
+
+```php
+$dataUri = $detector->getBase64DataURI();
+// data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+```
+
+## Optional ZipArchive support
+
+The detector is fully functional without PHP's `ZipArchive` extension; all ZIP
+signatures are recognised by scanning the first 4 KiB of the file for well-known
+markers such as `mimetype`, `[Content_Types].xml`, or `classes.dex`. When the
+extension is present, the `ZipSignatureDetector` opens the archive and inspects
+its entries directly. This deeper look allows the detector to resolve format
+families like OOXML (`.docx`, `.pptx`, `.xlsx`), APK/JAR/XPI bundles, and other
+ZIP-based containers even when their identifying files live deeper inside the
+archive than the cached bytes.
+
+If the extension is missing, the detector simply falls back to its heuristic
+path and ultimately reports a generic `application/zip` match whenever a more
+specific signature cannot be derived. Unit tests that require `ZipArchive` are
+skipped automatically when the class is not available, so no additional setup is
+needed to run the suite.
+
+## Extending the detector
+
+Custom formats can be added without modifying the library itself. Follow these
+steps to teach the detector about a new signature and MIME mapping.
+
+### 1. Implement a signature detector
+
+Create a class that implements
+`SoftCreatR\MimeDetector\Contract\FileSignatureDetectorInterface`. The detector
+receives the `DetectionContext`, which gives access to the file buffer and lets
+you return a `MimeTypeMatch` when the signature is recognised.
+
+```php
+<?php
+
+namespace App\MimeDetector;
+
+use SoftCreatR\MimeDetector\Attribute\DetectorCategory;
+use SoftCreatR\MimeDetector\Contract\FileSignatureDetectorInterface;
+use SoftCreatR\MimeDetector\Detection\DetectionContext;
+use SoftCreatR\MimeDetector\Detection\MimeTypeMatch;
+
+#[DetectorCategory('custom')]
+final class CustomContainerDetector implements FileSignatureDetectorInterface
+{
+    public function detect(DetectionContext $context): ?MimeTypeMatch
+    {
+        $buffer = $context->buffer();
+
+        if ($buffer->checkForBytes([0x43, 0x55, 0x53, 0x54])) { // "CUST"
+            return new MimeTypeMatch('custom', 'application/x-custom');
+        }
+
+        return null;
+    }
+}
+```
+
+### 2. Register MIME mappings
+
+Extend the repository so your MIME type resolves to the expected extension(s):
+
+```php
+use SoftCreatR\MimeDetector\MimeTypeRepository;
+
+$repository = MimeTypeRepository::createDefault();
+$repository->register('custom', 'application/x-custom');
+```
+
+### 3. Compose a detector pipeline
+
+Finally, plug your detector into the default pipeline and hand both pieces to
+the façade. Placing your detector first ensures it runs before the built-in
+matchers:
+
+```php
+use SoftCreatR\MimeDetector\Detection\DetectorPipeline;
+use SoftCreatR\MimeDetector\Detector\ArchiveSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\DocumentSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\ExecutableSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\FontSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\ImageSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\MediaSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\MiscSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\XmlSignatureDetector;
+use SoftCreatR\MimeDetector\Detector\ZipSignatureDetector;
+use SoftCreatR\MimeDetector\MimeDetector;
+
+$pipeline = DetectorPipeline::create(
+    new CustomContainerDetector(),
+    new ImageSignatureDetector(),
+    new ZipSignatureDetector(),
+    new ArchiveSignatureDetector(),
+    new MediaSignatureDetector(),
+    new DocumentSignatureDetector(),
+    new FontSignatureDetector(),
+    new ExecutableSignatureDetector(),
+    new MiscSignatureDetector(),
+    new XmlSignatureDetector(),
+);
+
+$detector = new MimeDetector(__DIR__ . '/file.cust', $repository, $pipeline);
+```
+
+From this point the new MIME type behaves exactly like the built-in ones – it
+can be detected from files, resolved by MIME type, and listed in the catalogue.
+
 ## Testing
 
-This project uses PHPUnit for testing. To run tests, use the following command:
+Fixture files for the test suite are stored in a Git submodule. After cloning
+this repository run:
 
 ```bash
+git submodule update --init --recursive
+composer install
 composer test
 ```
 
-To run a full test suite, you can use a set of provided test files. These files are not included in the Composer package or Git repository, so you must clone this repository and initialize its submodules:
-
-```bash
-git clone https://github.com/SoftCreatR/php-mime-detector
-cd php-mime-detector
-git submodule update --init --recursive
-```
-
-After that, install the necessary dependencies with `composer install`, and run PHPUnit as described above.
-
-## ToDo
-
-- Reduce method sizes where possible.
-- Add a method that accepts a MIME type and returns the corresponding file extension.
-- Add a method that accepts a file extension and returns a list of corresponding MIME types.
-- Add a method that returns a list of all detectable MIME types and their corresponding file extensions.
-
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-When adding new detections, please provide at least one sample file to ensure the detection works as expected.
+We welcome pull requests! Please review [CONTRIBUTING](CONTRIBUTING.md) for the
+coding standards and workflow. When adding new detections, include at least one
+fixture so behaviour can be verified automatically.
 
 ## License
 
-[ISC License](LICENSE.md)
-
-Free Software, Hell Yeah!
+Released under the [ISC License](LICENSE.md).

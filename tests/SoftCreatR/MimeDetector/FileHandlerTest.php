@@ -14,6 +14,8 @@ use PHPUnit\Framework\TestCase;
 use SoftCreatR\MimeDetector\FileHandler;
 use SoftCreatR\MimeDetector\MimeDetectorException;
 
+use const E_WARNING;
+
 class FileHandlerTest extends TestCase
 {
     private string $testFile;
@@ -42,6 +44,41 @@ class FileHandlerTest extends TestCase
         $fileHandler->setFile('non_existent.file');
     }
 
+    public function testSetFileThrowsExceptionForUnreadableFile(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->expectExceptionMessage("is not readable");
+
+        \stream_wrapper_register('filehandler-unreadable', UnreadableFileStream::class);
+
+        try {
+            $fileHandler = new FileHandler();
+            $fileHandler->setFile('filehandler-unreadable://file.txt');
+        } finally {
+            \stream_wrapper_unregister('filehandler-unreadable');
+        }
+    }
+
+    public function testSetFileThrowsExceptionWhenHashingFails(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->expectExceptionMessage("Unable to calculate the hash");
+
+        \stream_wrapper_register('filehandler-hashfail', HashFailureStream::class);
+
+        \set_error_handler(static function (): bool {
+            return true;
+        }, E_WARNING);
+
+        try {
+            $fileHandler = new FileHandler();
+            $fileHandler->setFile('filehandler-hashfail://file.txt');
+        } finally {
+            \restore_error_handler();
+            \stream_wrapper_unregister('filehandler-hashfail');
+        }
+    }
+
     /**
      * @throws MimeDetectorException
      */
@@ -54,6 +91,20 @@ class FileHandlerTest extends TestCase
         $this->assertSame($expectedHash, $fileHandler->getFileHash());
     }
 
+    /**
+     * @throws MimeDetectorException
+     */
+    public function testGetFilePathReturnsRegisteredPath(): void
+    {
+        $fileHandler = new FileHandler();
+        $fileHandler->setFile($this->testFile);
+
+        $this->assertSame($this->testFile, $fileHandler->getFilePath());
+    }
+
+    /**
+     * @throws MimeDetectorException
+     */
     public function testGetHashForExistingFile(): void
     {
         $fileHandler = new FileHandler();
@@ -63,6 +114,9 @@ class FileHandlerTest extends TestCase
         $this->assertSame($expectedHash, $hash);
     }
 
+    /**
+     * @throws MimeDetectorException
+     */
     public function testGetHashForString(): void
     {
         $fileHandler = new FileHandler();
@@ -72,6 +126,26 @@ class FileHandlerTest extends TestCase
         $this->assertSame($expectedHash, $hash);
     }
 
+    public function testGetHashThrowsExceptionWhenHashFileFails(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->expectExceptionMessage("Unable to calculate the hash");
+
+        \stream_wrapper_register('filehandler-hashfail', HashFailureStream::class);
+
+        \set_error_handler(static function (): bool {
+            return true;
+        }, E_WARNING);
+
+        try {
+            $fileHandler = new FileHandler();
+            $fileHandler->getHash('filehandler-hashfail://file.txt');
+        } finally {
+            \restore_error_handler();
+            \stream_wrapper_unregister('filehandler-hashfail');
+        }
+    }
+
     public function testGetFileHashBeforeSettingFile(): void
     {
         $fileHandler = new FileHandler();
@@ -79,4 +153,69 @@ class FileHandlerTest extends TestCase
         // Initially, fileHash should be an empty string
         $this->assertSame('', $fileHandler->getFileHash());
     }
+
+    public function testGetFilePathThrowsExceptionBeforeSettingFile(): void
+    {
+        $this->expectException(MimeDetectorException::class);
+        $this->expectExceptionMessage('No file provided.');
+
+        $fileHandler = new FileHandler();
+        $fileHandler->getFilePath();
+    }
 }
+
+// phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses, PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
+final class UnreadableFileStream
+{
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$opened_path): bool
+    {
+        return false;
+    }
+
+    public function stream_stat(): array
+    {
+        return [
+            'mode' => 0100000,
+            'size' => 0,
+            'mtime' => \time(),
+            'atime' => \time(),
+            'ctime' => \time(),
+        ];
+    }
+
+    public function url_stat(string $path, int $flags): array
+    {
+        return $this->stream_stat();
+    }
+}
+
+final class HashFailureStream
+{
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$opened_path): bool
+    {
+        return false;
+    }
+
+    public function stream_stat(): array
+    {
+        return [
+            'mode' => 0100644,
+            'size' => 0,
+            'mtime' => \time(),
+            'atime' => \time(),
+            'ctime' => \time(),
+        ];
+    }
+
+    public function url_stat(string $path, int $flags): array
+    {
+        return $this->stream_stat();
+    }
+}
+
+// phpcs:enable
