@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Mime Detector for PHP.
+ *
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ */
+
 declare(strict_types=1);
 
 namespace SoftCreatR\MimeDetector\Detector;
@@ -241,10 +247,6 @@ final class ZipSignatureDetector extends AbstractSignatureDetector
 
     private static function zipArchiveAvailable(): bool
     {
-        if (self::$zipArchiveAvailable !== null) {
-            return self::$zipArchiveAvailable;
-        }
-
-        return \class_exists(ZipArchive::class);
+        return self::$zipArchiveAvailable ?? \class_exists(ZipArchive::class);
     }
 }

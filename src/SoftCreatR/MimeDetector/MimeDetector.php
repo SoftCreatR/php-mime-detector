@@ -126,17 +126,90 @@ class MimeDetector
      */
     public function getFontAwesomeIcon(string $fileMimeType = '', bool $fixedWidth = false): string
     {
-        $iconClass = 'fa-file-o';
+        $fileMimeType = \strtolower($fileMimeType ?: $this->getMimeType());
 
-        $fileMimeType = $fileMimeType ?: $this->getMimeType();
+        $iconMap = [
+            'application/pdf' => 'fa-file-pdf',
+            'application/msword' => 'fa-file-word',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'fa-file-word',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.template' => 'fa-file-word',
+            'application/vnd.oasis.opendocument.text' => 'fa-file-word',
+            'application/rtf' => 'fa-file-word',
+            'application/vnd.ms-excel' => 'fa-file-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'fa-file-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.template' => 'fa-file-excel',
+            'application/vnd.oasis.opendocument.spreadsheet' => 'fa-file-excel',
+            'text/csv' => 'fa-file-csv',
+            'application/vnd.ms-powerpoint' => 'fa-file-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'fa-file-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.template' => 'fa-file-powerpoint',
+            'application/vnd.oasis.opendocument.presentation' => 'fa-file-powerpoint',
+            'application/vnd.apple.pages' => 'fa-file-word',
+            'application/vnd.apple.numbers' => 'fa-file-excel',
+            'application/vnd.apple.keynote' => 'fa-file-powerpoint',
+            'text/plain' => 'fa-file-lines',
+            'text/markdown' => 'fa-file-lines',
+            'text/x-markdown' => 'fa-file-lines',
+            'application/json' => 'fa-file-code',
+            'application/ld+json' => 'fa-file-code',
+            'application/graphql' => 'fa-file-code',
+            'application/xml' => 'fa-file-code',
+            'text/xml' => 'fa-file-code',
+            'application/xhtml+xml' => 'fa-file-code',
+            'text/html' => 'fa-file-code',
+            'text/css' => 'fa-file-code',
+            'application/javascript' => 'fa-file-code',
+            'text/javascript' => 'fa-file-code',
+            'application/x-sh' => 'fa-file-code',
+            'application/x-php' => 'fa-file-code',
+            'text/x-php' => 'fa-file-code',
+            'text/x-python' => 'fa-file-code',
+            'application/x-python-code' => 'fa-file-code',
+            'text/x-shellscript' => 'fa-file-code',
+            'text/x-c' => 'fa-file-code',
+            'text/x-c++' => 'fa-file-code',
+            'text/x-java-source' => 'fa-file-code',
+            'font/collection' => 'fa-font',
+            'font/otf' => 'fa-font',
+            'font/sfnt' => 'fa-font',
+            'font/ttf' => 'fa-font',
+            'font/woff' => 'fa-font',
+            'font/woff2' => 'fa-font',
+            'application/font-woff' => 'fa-font',
+            'application/font-woff2' => 'fa-font',
+            'application/vnd.ms-opentype' => 'fa-font',
+        ];
 
-        $iconClass = match (true) {
-            \str_contains($fileMimeType, 'image') => 'fa-file-image-o',
-            \str_contains($fileMimeType, 'audio') => 'fa-file-audio-o',
-            \str_contains($fileMimeType, 'video') => 'fa-file-video-o',
-            default => $iconClass,
-        };
+        if ($fileMimeType === '') {
+            $iconClass = 'fa-file';
+        } elseif (\array_key_exists($fileMimeType, $iconMap)) {
+            $iconClass = $iconMap[$fileMimeType];
+        } else {
+            $iconClass = match (true) {
+                $this->mimeIndicatesArchive($fileMimeType) => 'fa-file-zipper',
+                \str_starts_with($fileMimeType, 'image/') => 'fa-file-image',
+                \str_starts_with($fileMimeType, 'audio/') => 'fa-file-audio',
+                \str_starts_with($fileMimeType, 'video/') => 'fa-file-video',
+                \str_starts_with($fileMimeType, 'text/') => 'fa-file-lines',
+                \str_contains($fileMimeType, 'json'),
+                \str_contains($fileMimeType, 'xml'),
+                \str_contains($fileMimeType, 'script') => 'fa-file-code',
+                default => 'fa-file',
+            };
+        }
 
-        return 'fa ' . $iconClass . ($fixedWidth ? ' fa-fw' : '');
+        return 'fa-solid ' . $iconClass . ($fixedWidth ? ' fa-fw' : '');
+    }
+
+    private function mimeIndicatesArchive(string $fileMimeType): bool
+    {
+        return \str_contains($fileMimeType, 'zip')
+            || \str_contains($fileMimeType, 'rar')
+            || \str_contains($fileMimeType, '7z')
+            || \str_contains($fileMimeType, 'compressed')
+            || \str_contains($fileMimeType, 'tar')
+            || \str_contains($fileMimeType, 'gzip')
+            || \str_contains($fileMimeType, 'bzip')
+            || \str_contains($fileMimeType, 'xz');
     }
 }

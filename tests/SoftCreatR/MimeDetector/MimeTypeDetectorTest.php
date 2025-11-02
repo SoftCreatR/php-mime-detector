@@ -94,7 +94,7 @@ class MimeTypeDetectorTest extends TestCase
         };
 
         $detector = new class ($tracker) implements FileSignatureDetectorInterface {
-            public function __construct(private object $tracker)
+            public function __construct(private readonly object $tracker)
             {
                 // ...
             }

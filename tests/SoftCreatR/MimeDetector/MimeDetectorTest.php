@@ -275,7 +275,22 @@ class MimeDetectorTest extends TestCase
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
 
-        $this->assertSame('fa fa-file-o', $mimeDetector->getFontAwesomeIcon());
+        $this->assertSame('fa-solid fa-file', $mimeDetector->getFontAwesomeIcon());
+    }
+
+    /**
+     * @throws Exception
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconHandlesEmptyMimeType(): void
+    {
+        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock->method('getMimeType')->willReturn('');
+
+        $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
+
+        $this->assertSame('fa-solid fa-file', $mimeDetector->getFontAwesomeIcon());
     }
 
     /**
@@ -290,7 +305,7 @@ class MimeDetectorTest extends TestCase
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
 
-        $this->assertSame('fa fa-file-image-o', $mimeDetector->getFontAwesomeIcon());
+        $this->assertSame('fa-solid fa-file-image', $mimeDetector->getFontAwesomeIcon());
     }
 
     /**
@@ -305,7 +320,7 @@ class MimeDetectorTest extends TestCase
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
 
-        $this->assertSame('fa fa-file-audio-o', $mimeDetector->getFontAwesomeIcon());
+        $this->assertSame('fa-solid fa-file-audio', $mimeDetector->getFontAwesomeIcon());
     }
 
     /**
@@ -320,7 +335,7 @@ class MimeDetectorTest extends TestCase
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
 
-        $this->assertSame('fa fa-file-video-o', $mimeDetector->getFontAwesomeIcon());
+        $this->assertSame('fa-solid fa-file-video', $mimeDetector->getFontAwesomeIcon());
     }
 
     /**
@@ -335,7 +350,114 @@ class MimeDetectorTest extends TestCase
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
 
-        $this->assertSame('fa fa-file-image-o fa-fw', $mimeDetector->getFontAwesomeIcon('', true));
+        $this->assertSame('fa-solid fa-file-image fa-fw', $mimeDetector->getFontAwesomeIcon('', true));
+    }
+
+    /**
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForPdf(): void
+    {
+        $mimeDetector = $this->createMimeDetectorWithMocks();
+
+        $this->assertSame('fa-solid fa-file-pdf', $mimeDetector->getFontAwesomeIcon('application/pdf'));
+    }
+
+    /**
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForSpreadsheet(): void
+    {
+        $mimeDetector = $this->createMimeDetectorWithMocks();
+
+        $this->assertSame(
+            'fa-solid fa-file-excel',
+            $mimeDetector->getFontAwesomeIcon('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+        );
+    }
+
+    /**
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForArchive(): void
+    {
+        $mimeDetector = $this->createMimeDetectorWithMocks();
+
+        $this->assertSame(
+            'fa-solid fa-file-zipper',
+            $mimeDetector->getFontAwesomeIcon('application/x-7z-compressed'),
+        );
+    }
+
+    /**
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForJsonSubtype(): void
+    {
+        $mimeDetector = $this->createMimeDetectorWithMocks();
+
+        $this->assertSame(
+            'fa-solid fa-file-code',
+            $mimeDetector->getFontAwesomeIcon('application/vnd.api+json'),
+        );
+    }
+
+    /**
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForXmlSubtype(): void
+    {
+        $mimeDetector = $this->createMimeDetectorWithMocks();
+
+        $this->assertSame(
+            'fa-solid fa-file-code',
+            $mimeDetector->getFontAwesomeIcon('application/atom+xml'),
+        );
+    }
+
+    /**
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForScriptSubtype(): void
+    {
+        $mimeDetector = $this->createMimeDetectorWithMocks();
+
+        $this->assertSame(
+            'fa-solid fa-file-code',
+            $mimeDetector->getFontAwesomeIcon('application/postscript'),
+        );
+    }
+
+    /**
+     * @throws Exception
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForTextSubtype(): void
+    {
+        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock->method('getMimeType')->willReturn('text/calendar');
+
+        $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
+
+        $this->assertSame('fa-solid fa-file-lines', $mimeDetector->getFontAwesomeIcon());
+    }
+
+    /**
+     * @throws MimeDetectorException
+     * @throws ReflectionException
+     */
+    public function testGetFontAwesomeIconForFontMimeType(): void
+    {
+        $mimeDetector = $this->createMimeDetectorWithMocks();
+
+        $this->assertSame('fa-solid fa-font', $mimeDetector->getFontAwesomeIcon('font/woff2'));
     }
 
     /**

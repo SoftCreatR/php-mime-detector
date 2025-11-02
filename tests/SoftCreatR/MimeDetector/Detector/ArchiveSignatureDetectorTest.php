@@ -102,6 +102,9 @@ final class ArchiveSignatureDetectorTest extends TestCase
         $this->assertSame('application/x-lzh-compressed', $match->mimeType());
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testTarChecksumFailsWhenHeaderBytesAreMissing(): void
     {
         $detector = new ArchiveSignatureDetector();
@@ -111,6 +114,9 @@ final class ArchiveSignatureDetectorTest extends TestCase
         $this->assertNull($match);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testTarChecksumFailsWhenBodyBytesAreUnavailable(): void
     {
         $detector = new ArchiveSignatureDetector();
@@ -172,6 +178,9 @@ final class ArchiveSignatureDetectorTest extends TestCase
         return $detector->detect($context);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     private function setByteCacheProperty(
         ReflectionClass $reflection,
         ByteCacheHandler $handler,

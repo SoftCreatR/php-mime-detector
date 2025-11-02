@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Mime Detector for PHP.
+ *
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ */
+
 declare(strict_types=1);
 
 namespace SoftCreatR\MimeDetector;
@@ -19,6 +25,7 @@ use SoftCreatR\MimeDetector\Detector\MediaSignatureDetector;
 use SoftCreatR\MimeDetector\Detector\MiscSignatureDetector;
 use SoftCreatR\MimeDetector\Detector\XmlSignatureDetector;
 use SoftCreatR\MimeDetector\Detector\ZipSignatureDetector;
+use SoftCreatR\MimeDetector\Support\DetectorExtensions;
 
 /**
  * Default implementation of the MIME type resolver backed by signature
@@ -26,6 +33,8 @@ use SoftCreatR\MimeDetector\Detector\ZipSignatureDetector;
  */
 final class MimeTypeDetector implements MimeTypeResolverInterface
 {
+    use DetectorExtensions;
+
     private DetectorPipeline $pipeline;
 
     private MimeTypeRepository $repository;
@@ -108,6 +117,7 @@ final class MimeTypeDetector implements MimeTypeResolverInterface
     private static function defaultDetectors(): array
     {
         return [
+            ...self::resolveDetectorExtensions(),
             new ImageSignatureDetector(),
             new ZipSignatureDetector(),
             new ArchiveSignatureDetector(),

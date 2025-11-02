@@ -33,7 +33,7 @@ class DetectorPipelineTest extends TestCase
         };
 
         $successfulDetector = new class ($match) implements FileSignatureDetectorInterface {
-            public function __construct(private MimeTypeMatch $match)
+            public function __construct(private readonly MimeTypeMatch $match)
             {
                 // ...
             }
@@ -56,13 +56,14 @@ class DetectorPipelineTest extends TestCase
     public function testDetectReturnsRememberedMatchWithoutInvokingDetectorsAgain(): void
     {
         [$context, $file] = $this->createContext();
+
         $match = new MimeTypeMatch('bin', 'application/octet-stream');
         $tracker = new class {
             public int $calls = 0;
         };
 
         $detector = new class ($tracker, $match) implements FileSignatureDetectorInterface {
-            public function __construct(private object $tracker, private MimeTypeMatch $match)
+            public function __construct(private readonly object $tracker, private readonly MimeTypeMatch $match)
             {
                 // ...
             }

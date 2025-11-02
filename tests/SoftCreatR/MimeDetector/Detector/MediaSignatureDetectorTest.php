@@ -179,7 +179,7 @@ final class MediaSignatureDetectorTest extends TestCase
     private static function createIsoBrandSample(string $brand): string
     {
         $brand = \substr($brand, 0, 4);
-        $brand = \str_pad($brand, 4, ' ');
+        $brand = \str_pad($brand, 4);
 
         return "\x00\x00\x00\x18ftyp" . $brand . \str_repeat("\x00", 8);
     }

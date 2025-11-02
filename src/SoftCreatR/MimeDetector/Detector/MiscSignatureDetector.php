@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Mime Detector for PHP.
+ *
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ */
+
 declare(strict_types=1);
 
 namespace SoftCreatR\MimeDetector\Detector;
@@ -216,6 +222,7 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
             return false;
         }
 
+        /** @noinspection JsonEncodingApiUsageInspection */
         $decoded = \json_decode($json, true);
 
         return $decoded !== null && \json_last_error() === JSON_ERROR_NONE && isset($decoded['files']);

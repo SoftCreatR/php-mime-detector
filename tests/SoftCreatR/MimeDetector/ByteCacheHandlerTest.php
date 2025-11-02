@@ -311,7 +311,7 @@ final class ByteCacheReadFailureStream
         return true;
     }
 
-    public function stream_read(int $count)
+    public function stream_read(int $count): bool
     {
         return false;
     }

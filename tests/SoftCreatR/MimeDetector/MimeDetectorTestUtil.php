@@ -32,11 +32,7 @@ class MimeDetectorTestUtil
             throw new ReflectionException('Method ' . $methodName . ' is not defined.');
         }
 
-        $method = $class->getMethod($methodName);
-
-        $method->setAccessible(true);
-
-        return $method;
+        return $class->getMethod($methodName);
     }
 
     /**
@@ -57,8 +53,6 @@ class MimeDetectorTestUtil
         if (!$method->isProtected()) {
             throw new ReflectionException('Method ' . $methodName . ' is not protected.');
         }
-
-        $method->setAccessible(true);
 
         return $method;
     }
@@ -82,9 +76,7 @@ class MimeDetectorTestUtil
             throw new ReflectionException('Property ' . $propertyName . ' is not protected.');
         }
 
-        $property->setAccessible(true);
         $property->setValue($obj, $value);
-        $property->setAccessible(false);
     }
 
     /**
@@ -101,7 +93,6 @@ class MimeDetectorTestUtil
         }
 
         $property = $class->getProperty($propertyName);
-        $property->setAccessible(true);
         $property->setValue($obj, $value);
     }
 }

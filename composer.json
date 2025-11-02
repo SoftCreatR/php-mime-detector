@@ -35,6 +35,9 @@
     "roave/security-advisories": "dev-latest",
     "squizlabs/php_codesniffer": "^3.10"
   },
+  "suggest": {
+    "ext-zip": "*"
+  },
   "minimum-stability": "stable",
   "prefer-stable": true,
   "autoload": {
