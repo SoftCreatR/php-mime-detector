@@ -43,6 +43,15 @@ final class XmlSignatureDetectorTest extends TestCase
         yield 'rdf' => ['<?xml <rdf:RDF></rdf:RDF>', 'rdf', 'application/rdf+xml'];
         yield 'rss' => ['<?xml <rss version="2.0"></rss>', 'rss', 'application/rss+xml'];
         yield 'generic xml' => ['<?xml <root/>', 'xml', 'application/xml'];
+        yield 'xml with leading whitespace' => ["\n\t<?xml <root/>", 'xml', 'application/xml'];
+        yield 'xml without declaration' => ['<root/>', 'xml', 'application/xml'];
+        yield 'truncated xml declaration' => ['<?xml', 'xml', 'application/xml'];
+        yield 'xpacket xmp' => [
+            '<?xpacket begin="id"?>'
+            . '<x:xmpmeta><rdf:RDF></rdf:RDF></x:xmpmeta>',
+            'rdf',
+            'application/rdf+xml',
+        ];
         yield 'utf8 bom xml' => ["\xEF\xBB\xBF<?xml <root/>", 'xml', 'application/xml'];
         yield 'utf16-le xml' => ["\xFF\xFE" . self::toUtf16Le('<?xml <root/>'), 'xml', 'application/xml'];
         yield 'utf16-be xml' => ["\xFE\xFF" . self::toUtf16Be('<?xml <root/>'), 'xml', 'application/xml'];
@@ -70,6 +79,44 @@ final class XmlSignatureDetectorTest extends TestCase
         $detector = new XmlSignatureDetector();
 
         $match = $this->detect($detector, 'plain text document');
+
+        $this->assertNull($match);
+    }
+
+    public function testReturnsNullForEmptyPayload(): void
+    {
+        $detector = new XmlSignatureDetector();
+
+        $match = $this->detect($detector, '');
+
+        $this->assertNull($match);
+    }
+
+    public function testReturnsNullForWhitespaceOnlyPayload(): void
+    {
+        $detector = new XmlSignatureDetector();
+
+        $match = $this->detect($detector, " \n\t");
+
+        $this->assertNull($match);
+    }
+
+    public function testReturnsNullForUtf16LeWithoutXmlDeclaration(): void
+    {
+        $detector = new XmlSignatureDetector();
+
+        $payload = "\xFF\xFE" . self::toUtf16Le('not xml');
+        $match = $this->detect($detector, $payload);
+
+        $this->assertNull($match);
+    }
+
+    public function testReturnsNullForUtf16BeWithoutXmlDeclaration(): void
+    {
+        $detector = new XmlSignatureDetector();
+
+        $payload = "\xFE\xFF" . self::toUtf16Be('not xml');
+        $match = $this->detect($detector, $payload);
 
         $this->assertNull($match);
     }
