@@ -266,11 +266,16 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
             }
         }
 
-        if ($hasNikonMake && $hasSubIfds && $this->hasNefHeader($buffer)) {
+        if ($this->isNefTiff($buffer, $hasNikonMake, $hasSubIfds)) {
             return $this->match('nef', 'image/x-nikon-nef');
         }
 
         return null;
+    }
+
+    private function isNefTiff(FileBuffer $buffer, bool $hasNikonMake, bool $hasSubIfds): bool
+    {
+        return $hasNikonMake && $hasSubIfds && $this->hasNefHeader($buffer);
     }
 
     private function hasNefHeader(FileBuffer $buffer): bool
