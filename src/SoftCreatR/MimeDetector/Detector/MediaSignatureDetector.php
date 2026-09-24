@@ -119,8 +119,25 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
             }
         }
 
-        if ($buffer->checkForBytes([0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9])) {
-            return $this->match('wmv', 'video/x-ms-wmv');
+        if ($buffer->checkString("\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9\x00\xAA\x00\x62\xCE\x6C")) {
+            $videoStream = [
+                0xC0, 0xEF, 0x19, 0xBC, 0x4D, 0x5B, 0xCF, 0x11,
+                0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B,
+            ];
+            $audioStream = [
+                0x40, 0x9E, 0x69, 0xF8, 0x4D, 0x5B, 0xCF, 0x11,
+                0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B,
+            ];
+
+            if ($buffer->searchForBytes($videoStream) !== -1) {
+                return $this->match('wmv', 'video/x-ms-wmv');
+            }
+
+            if ($buffer->searchForBytes($audioStream) !== -1) {
+                return $this->match('wma', 'audio/x-ms-wma');
+            }
+
+            return $this->match('asf', 'video/x-ms-asf');
         }
 
         if (

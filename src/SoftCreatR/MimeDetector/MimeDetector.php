@@ -50,6 +50,22 @@ class MimeDetector
     }
 
     /**
+     * Return a preferred media type spelling without changing getMimeType().
+     */
+    public function getPreferredMimeType(): string
+    {
+        $mimeType = $this->getMimeType();
+
+        // The legacy result names the Opus codec. RFC 7845 recommends the Ogg
+        // container media type for the .opus files detected by this library.
+        if ($mimeType === 'audio/opus' && $this->getFileExtension() === 'opus') {
+            return 'audio/ogg';
+        }
+
+        return MimeTypeAliases::preferred($mimeType);
+    }
+
+    /**
      * Resolve the file extension for the configured file.
      */
     public function getFileExtension(): string
@@ -87,6 +103,8 @@ class MimeDetector
 
     /**
      * Return the CRC32 hash of the configured file.
+     *
+     * @throws MimeDetectorException When the file cannot be read at this point.
      */
     public function getFileHash(): string
     {

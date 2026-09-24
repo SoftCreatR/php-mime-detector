@@ -1,9 +1,10 @@
 # PHP Mime Detector
 
-A modern, extensible MIME type detector for PHP that analyses the actual bytes
+A modern, extensible MIME type detector for PHP that analyses the initial bytes
 of a file instead of trusting its extension. The detector ships with a modular
 pipeline of signature matchers and a bidirectional repository of MIME type ↔
-extension mappings so you can integrate it into security-sensitive workflows.
+extension mappings. Signature detection is a best-effort format hint; validate
+file structure and apply upload policy separately when handling untrusted files.
 
 ## Features
 
@@ -14,9 +15,8 @@ extension mappings so you can integrate it into security-sensitive workflows.
   or extended without touching the core.
 - **Rich lookup helpers** – translate between MIME types and extensions in both
   directions and enumerate the supported catalogue.
-- **No external dependencies** – runs on any PHP 8.1+ installation without and can take
-  requiring additional, external extensions, or packages, but takes advantage
-  of `ZipArchive` when it is available.
+- **No runtime packages** – requires PHP 8.1+ and `ext-ctype`. It uses
+  `ZipArchive` for deeper ZIP inspection when that extension is available.
 
 ## Installation
 
@@ -46,7 +46,7 @@ try {
     echo $detector->getFileExtension();  // png
     echo $detector->getFileHash();       // crc32 hash of the file contents
 } catch (MimeDetectorException $exception) {
-    // React to unreadable files or unsupported formats.
+    // React to unreadable files.
     echo $exception->getMessage();
 }
 ```
@@ -59,7 +59,7 @@ operate on the shared repository of known mappings:
 ```php
 $detector = new MimeDetector(__DIR__ . '/example.png');
 
-// Retrieve the canonical extension for a MIME type.
+// Retrieve a preferred extension for a MIME type.
 $extension = $detector->getExtensionForMimeType('image/jpeg'); // "jpg"
 
 // List every MIME type that corresponds to the given extension.
@@ -68,6 +68,37 @@ $mimeTypes = $detector->getMimeTypesForExtension('heic');
 // Fetch the complete map as [mimeType => list of extensions].
 $catalogue = $detector->listAllMimeTypes();
 ```
+
+### Comparing MIME names
+
+Some tools use different names for the same format. Most existing MIME return
+values are preserved, but newly distinguished formats have new results; see
+the [upgrade notes](CHANGELOG.md). Use
+`MimeTypeAliases` to compare a detector result with another source, such as
+PHP's `fileinfo`, or to request a preferred name:
+
+```php
+use SoftCreatR\MimeDetector\MimeTypeAliases;
+
+$detected = $detector->getMimeType(); // audio/vnd.wave for a WAV file
+$fileinfo = 'audio/x-wav';
+
+if (!MimeTypeAliases::equivalent($detected, $fileinfo)) {
+    // Review the difference before applying the upload policy.
+}
+
+$preferred = $detector->getPreferredMimeType(); // audio/vnd.wave
+```
+
+The alias list is deliberately conservative. In particular, `audio/ogg` and
+`audio/opus`, or `font/sfnt` and `font/ttf`, describe different levels of a
+format and are not treated as interchangeable. Unknown names only match when
+their normalized names are identical. The preferred name is not guaranteed to
+be IANA registered for every format.
+
+For Ogg Opus files, `getMimeType()` still returns the legacy `audio/opus` value,
+while `getPreferredMimeType()` returns the `audio/ogg` container type recommended
+by RFC 7845. The generic alias helper does not equate codec and container names.
 
 Need a data URI? The detector will encode the configured file for you:
 
@@ -78,20 +109,24 @@ $dataUri = $detector->getBase64DataURI();
 
 ## Optional ZipArchive support
 
-The detector is fully functional without PHP's `ZipArchive` extension; all ZIP
+The detector is fully functional without PHP's `ZipArchive` extension; ZIP
 signatures are recognised by scanning the first 4 KiB of the file for well-known
 markers such as `mimetype`, `[Content_Types].xml`, or `classes.dex`. When the
 extension is present, the `ZipSignatureDetector` opens the archive and inspects
 its entries directly. This deeper look allows the detector to resolve format
-families like OOXML (`.docx`, `.pptx`, `.xlsx`), APK/JAR/XPI bundles, and other
-ZIP-based containers even when their identifying files live deeper inside the
-archive than the cached bytes.
+families like OOXML (`.docx`, `.pptx`, `.xlsx`), APK/JAR/XPI bundles, and iWork
+(`.pages`, `.numbers`, `.key`) even when their identifying files live deeper
+inside the archive than the cached bytes.
 
 If the extension is missing, the detector simply falls back to its heuristic
 path and ultimately reports a generic `application/zip` match whenever a more
 specific signature cannot be derived. Unit tests that require `ZipArchive` are
 skipped automatically when the class is not available, so no additional setup is
 needed to run the suite.
+
+ISO 9660 images are identified from their volume descriptor at sector 16. This
+requires a seekable file; an input that cannot be sought falls back to the other
+detectors.
 
 ## Extending the detector
 
@@ -217,7 +252,7 @@ MimeTypeDetector::extend(
 
 $detector = new MimeDetector(__DIR__ . '/file.cust', $repository);
 
-$match = $detector->getMimeType(); // application/x-custom-container
+$match = $detector->getMimeType(); // application/x-custom
 ```
 
 If you do need full control you can still provide a bespoke pipeline. Simply
@@ -266,6 +301,11 @@ git submodule update --init --recursive
 composer install
 composer test
 ```
+
+The fixture corpus lives in the separate `mime-detector-fixtures` repository.
+Keeping the submodule means the fixtures are not bundled into Composer installs;
+Git source archives do not include submodule contents. Add new binary fixtures
+there and update the submodule reference when publishing a coordinated change.
 
 ## Contributing
 

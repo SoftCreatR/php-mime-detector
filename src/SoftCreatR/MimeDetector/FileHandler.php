@@ -20,7 +20,7 @@ class FileHandler
     private ?string $filePath = null;
 
     /**
-     * Register a file with the handler and calculate its checksum.
+     * Register a file with the handler. The checksum is calculated on demand.
      *
      * @throws MimeDetectorException When the file is missing or unreadable.
      */
@@ -34,13 +34,7 @@ class FileHandler
             throw MimeDetectorException::fileNotReadable($filePath);
         }
 
-        $hash = \hash_file('crc32b', $filePath);
-
-        if ($hash === false) {
-            throw MimeDetectorException::unableToHashFile($filePath);
-        }
-
-        $this->fileHash = $hash;
+        $this->fileHash = '';
         $this->filePath = $filePath;
 
         return $this;
@@ -67,10 +61,22 @@ class FileHandler
     }
 
     /**
-     * Retrieve the cached checksum of the registered file.
+     * Retrieve or calculate the checksum of the registered file.
+     *
+     * @throws MimeDetectorException When the file cannot be hashed.
      */
     public function getFileHash(): string
     {
+        if ($this->fileHash === '' && $this->filePath !== null) {
+            $hash = @\hash_file('crc32b', $this->filePath);
+
+            if ($hash === false) {
+                throw MimeDetectorException::unableToHashFile($this->filePath);
+            }
+
+            $this->fileHash = $hash;
+        }
+
         return $this->fileHash;
     }
 

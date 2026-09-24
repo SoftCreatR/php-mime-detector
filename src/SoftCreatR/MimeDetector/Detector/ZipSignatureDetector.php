@@ -238,11 +238,46 @@ final class ZipSignatureDetector extends AbstractSignatureDetector
             if ($zip->locateName('META-INF/MANIFEST.MF', ZipArchive::FL_NOCASE) !== false) {
                 return $this->match('jar', 'application/java-archive');
             }
+
+            $iWorkMatch = $this->detectIWork($zip);
+
+            if ($iWorkMatch !== null) {
+                return $iWorkMatch;
+            }
         } finally {
             $zip->close();
         }
 
         return null;
+    }
+
+    private function detectIWork(ZipArchive $zip): ?MimeTypeMatch
+    {
+        if ($zip->locateName('Index/Document.iwa') === false) {
+            return null;
+        }
+
+        $hasTables = false;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+
+            if (!\is_string($name)) {
+                continue;
+            }
+
+            if (\str_starts_with($name, 'Index/MasterSlide')) {
+                return $this->match('key', 'application/vnd.apple.keynote');
+            }
+
+            if (\str_starts_with($name, 'Index/Tables/')) {
+                $hasTables = true;
+            }
+        }
+
+        return $hasTables
+            ? $this->match('numbers', 'application/vnd.apple.numbers')
+            : $this->match('pages', 'application/vnd.apple.pages');
     }
 
     private static function zipArchiveAvailable(): bool

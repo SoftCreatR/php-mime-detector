@@ -38,10 +38,22 @@ final class XmlSignatureDetectorTest extends TestCase
 
     public static function provideXmlSamples(): iterable
     {
-        yield 'svg' => ['<?xml <svg></svg>', 'svg', 'image/svg+xml'];
-        yield 'html xml' => ['<?xml <!DOCTYPE html><html></html>', 'html', 'text/html'];
-        yield 'rdf' => ['<?xml <rdf:RDF></rdf:RDF>', 'rdf', 'application/rdf+xml'];
-        yield 'rss' => ['<?xml <rss version="2.0"></rss>', 'rss', 'application/rss+xml'];
+        yield 'svg' => ['<?xml version="1.0"?><svg></svg>', 'svg', 'image/svg+xml'];
+        yield 'html xml' => ['<?xml version="1.0"?><!DOCTYPE html><html></html>', 'html', 'text/html'];
+        yield 'rdf' => ['<?xml version="1.0"?><rdf:RDF></rdf:RDF>', 'rdf', 'application/rdf+xml'];
+        yield 'rss' => ['<?xml version="1.0"?><rss version="2.0"></rss>', 'rss', 'application/rss+xml'];
+        yield 'kml' => [
+            '<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"/>',
+            'kml',
+            'application/vnd.google-earth.kml+xml',
+        ];
+        yield 'gpx' => [
+            '<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1"/>',
+            'gpx',
+            'application/gpx+xml',
+        ];
+        yield 'html containing svg' => ['<html><body><svg></svg></body></html>', 'html', 'text/html'];
+        yield 'xml comment containing svg' => ['<!-- <svg></svg> --><root/>', 'xml', 'application/xml'];
         yield 'generic xml' => ['<?xml <root/>', 'xml', 'application/xml'];
         yield 'xml with leading whitespace' => ["\n\t<?xml <root/>", 'xml', 'application/xml'];
         yield 'xml without declaration' => ['<root/>', 'xml', 'application/xml'];

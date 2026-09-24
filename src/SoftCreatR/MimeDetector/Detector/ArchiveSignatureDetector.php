@@ -124,7 +124,38 @@ final class ArchiveSignatureDetector extends AbstractSignatureDetector
             return $this->match('lzh', 'application/x-lzh-compressed');
         }
 
+        if ($this->isIso9660Image($context)) {
+            return $this->match('iso', 'application/x-iso9660-image');
+        }
+
         return null;
+    }
+
+    private function isIso9660Image(DetectionContext $context): bool
+    {
+        $handle = @\fopen($context->file(), 'rb');
+
+        if ($handle === false) {
+            return false;
+        }
+
+        try {
+            $stat = \fstat($handle);
+
+            if ($stat === false || $stat['size'] < 32775 || @\fseek($handle, 32768) !== 0) {
+                return false;
+            }
+
+            $descriptor = @\fread($handle, 7);
+
+            return \is_string($descriptor)
+                && \strlen($descriptor) === 7
+                && \ord($descriptor[0]) <= 3
+                && \substr($descriptor, 1, 5) === 'CD001'
+                && $descriptor[6] === "\x01";
+        } finally {
+            \fclose($handle);
+        }
     }
 
     private function isTarArchive(FileBuffer $buffer): bool

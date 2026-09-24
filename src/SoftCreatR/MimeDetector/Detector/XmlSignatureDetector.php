@@ -81,23 +81,27 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
 
     private function detectXmlFamily(string $snippet): MimeTypeMatch
     {
-        if (\str_contains($snippet, '<!doctype svg') || \str_contains($snippet, '<svg')) {
-            return $this->match('svg', 'image/svg+xml');
+        // Inspect the document element only. A later <svg> inside HTML or an
+        // XML comment must not change the type of the whole document.
+        $withoutProlog = \preg_replace(
+            '/\A(?:\s|<\?[^>]*\?>|<!--.*?-->|<!doctype[^>]*>)+/s',
+            '',
+            $snippet,
+        );
+
+        if ($withoutProlog === null || !\preg_match('/\A<([a-z][a-z0-9_.:-]*)\b/', $withoutProlog, $matches)) {
+            return $this->match('xml', 'application/xml');
         }
 
-        if (\str_contains($snippet, '<!doctype html') || \str_contains($snippet, '<html')) {
-            return $this->match('html', 'text/html');
-        }
-
-        if (\str_contains($snippet, '<x:xmpmeta') || \str_contains($snippet, '<rdf:rdf')) {
-            return $this->match('rdf', 'application/rdf+xml');
-        }
-
-        if (\str_contains($snippet, '<rss version="2.0"')) {
-            return $this->match('rss', 'application/rss+xml');
-        }
-
-        return $this->match('xml', 'application/xml');
+        return match ($matches[1]) {
+            'svg' => $this->match('svg', 'image/svg+xml'),
+            'html' => $this->match('html', 'text/html'),
+            'rdf:rdf', 'x:xmpmeta' => $this->match('rdf', 'application/rdf+xml'),
+            'rss' => $this->match('rss', 'application/rss+xml'),
+            'kml' => $this->match('kml', 'application/vnd.google-earth.kml+xml'),
+            'gpx' => $this->match('gpx', 'application/gpx+xml'),
+            default => $this->match('xml', 'application/xml'),
+        };
     }
 
     private function startsWithXmlDeclaration(string $snippet): bool

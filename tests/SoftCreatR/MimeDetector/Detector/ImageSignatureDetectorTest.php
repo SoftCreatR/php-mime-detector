@@ -52,6 +52,12 @@ final class ImageSignatureDetectorTest extends TestCase
             'orf' => ["\x49\x49\x52\x4F\x08\x00\x00\x00\x18", 'orf', 'image/x-olympus-orf'],
             'raf' => ['FUJIFILMCCD-RAW', 'raf', 'image/x-fujifilm-raf'],
             'rw2' => ["\x49\x49\x55\x00\x18\x00\x00\x00\x88\xE7\x74\xD8", 'rw2', 'image/x-panasonic-rw2'],
+            'TIFF with NEF-like tag count' => [
+                "II\x2A\x00" . \pack('V', 8) . \pack('v', 28) . \pack('v', 254)
+                    . \pack('v', 4) . \pack('V', 1) . \pack('V', 0) . \str_repeat("\0", 27 * 12 + 4),
+                'tif',
+                'image/tiff',
+            ],
             'xcf' => ['gimp xcf ' . \str_repeat("\0", 2), 'xcf', 'image/x-xcf'],
         ];
     }

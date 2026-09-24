@@ -65,6 +65,7 @@ class ByteCacheHandler
         }
 
         $this->maxByteCacheLen = $maxLength;
+        $this->createByteCache();
     }
 
     /**
@@ -96,6 +97,8 @@ class ByteCacheHandler
         if ($data === false) {
             throw MimeDetectorException::fileNotReadable($this->file);
         }
+
+        $this->byteCache = [];
 
         foreach (\str_split($data) as $i => $char) {
             $this->byteCache[$i] = \ord($char);
@@ -136,9 +139,13 @@ class ByteCacheHandler
      */
     public function searchForBytes(array $bytes, int $offset = 0, array $mask = []): int
     {
+        if ($bytes === []) {
+            return -1;
+        }
+
         $limit = $this->byteCacheLen - \count($bytes);
 
-        for ($i = $offset; $i < $limit; $i++) {
+        for ($i = \max(0, $offset); $i <= $limit; $i++) {
             if ($this->checkForBytes($bytes, $i, $mask)) {
                 return $i;
             }
@@ -159,6 +166,6 @@ class ByteCacheHandler
      */
     public function toBytes(string $str): array
     {
-        return \array_values(\unpack('C*', $str));
+        return $str === '' ? [] : \array_values(\unpack('C*', $str));
     }
 }

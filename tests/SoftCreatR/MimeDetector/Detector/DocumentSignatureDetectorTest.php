@@ -111,7 +111,7 @@ final class DocumentSignatureDetectorTest extends TestCase
         $this->assertSame('application/vnd.ms-excel', $match?->mimeType());
     }
 
-    public function testDetectsXlsWithWorkbookStream(): void
+    public function testOleSectorMarkersDoNotIdentifyAnExcelFile(): void
     {
         $data = $this->bytesWithOffsets([
             0 => self::OLE_HEADER,
@@ -120,16 +120,16 @@ final class DocumentSignatureDetectorTest extends TestCase
 
         $match = $this->detect(new DocumentSignatureDetector(), $data);
 
-        $this->assertSame('xls', $match?->extension());
-        $this->assertSame('application/vnd.ms-excel', $match?->mimeType());
+        $this->assertSame('cfb', $match?->extension());
+        $this->assertSame('application/x-cfb', $match?->mimeType());
     }
 
-    public function testDefaultsToMsiForOleDocuments(): void
+    public function testFallsBackToCompoundFileForUnknownOleDocuments(): void
     {
         $match = $this->detect(new DocumentSignatureDetector(), self::bytes(self::OLE_HEADER));
 
-        $this->assertSame('msi', $match?->extension());
-        $this->assertSame('application/x-msi', $match?->mimeType());
+        $this->assertSame('cfb', $match?->extension());
+        $this->assertSame('application/x-cfb', $match?->mimeType());
     }
 
     public function testReturnsNullForUnknownDocuments(): void

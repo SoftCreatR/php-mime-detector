@@ -100,9 +100,10 @@ class ByteCacheHandlerTest extends TestCase
     public function testSetMaxByteCacheLenSetsLength(): void
     {
         $byteCacheHandler = new ByteCacheHandler($this->testFile);
-        $byteCacheHandler->setMaxByteCacheLen(1024);
+        $byteCacheHandler->setMaxByteCacheLen(10);
 
-        $this->assertEquals(1024, $byteCacheHandler->getMaxByteCacheLen());
+        $this->assertSame(10, $byteCacheHandler->getMaxByteCacheLen());
+        $this->assertSame(10, $byteCacheHandler->getByteCacheLen());
     }
 
     /**
@@ -210,6 +211,15 @@ class ByteCacheHandlerTest extends TestCase
 
         // Adjusted the expected offset for "string" to 15
         $this->assertEquals(15, $byteCacheHandler->searchForBytes([115, 116, 114, 105, 110, 103])); // "string"
+    }
+
+    public function testSearchIncludesTheFinalPossibleOffset(): void
+    {
+        $handler = new ByteCacheHandler($this->testFile);
+
+        $expectedOffset = \strlen('This is a test string for byte cache testing.') - 4;
+        $this->assertSame($expectedOffset, $handler->searchForBytes([105, 110, 103, 46]));
+        $this->assertSame([], $handler->toBytes(''));
     }
 
     /**

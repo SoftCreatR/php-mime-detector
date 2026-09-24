@@ -66,14 +66,13 @@ final class DocumentSignatureDetector extends AbstractSignatureDetector
                 return $this->match('vsd', 'application/vnd.visio');
             }
 
-            if (
-                $buffer->checkForBytes([0x09, 0x08, 0x10, 0x00, 0x00, 0x06, 0x05, 0x00], 2048)
-                || $buffer->checkForBytes([0xFD, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], 512)
-            ) {
+            if ($buffer->searchForBytes([0x09, 0x08, 0x10, 0x00, 0x00, 0x06, 0x05, 0x00]) !== -1) {
                 return $this->match('xls', 'application/vnd.ms-excel');
             }
 
-            return $this->match('msi', 'application/x-msi');
+            // The OLE header is shared by Office documents, MSI installers,
+            // and other compound files. It cannot identify an MSI by itself.
+            return $this->match('cfb', 'application/x-cfb');
         }
 
         if ($buffer->checkString('ITSF')) {
