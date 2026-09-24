@@ -13,6 +13,7 @@ namespace SoftCreatR\MimeDetector\Detector;
 use SoftCreatR\MimeDetector\Attribute\DetectorCategory;
 use SoftCreatR\MimeDetector\Detection\DetectionContext;
 use SoftCreatR\MimeDetector\Detection\MimeTypeMatch;
+use SoftCreatR\MimeDetector\Support\IWorkArchiveInspector;
 use ZipArchive;
 
 /**
@@ -238,11 +239,27 @@ final class ZipSignatureDetector extends AbstractSignatureDetector
             if ($zip->locateName('META-INF/MANIFEST.MF', ZipArchive::FL_NOCASE) !== false) {
                 return $this->match('jar', 'application/java-archive');
             }
+
+            $iWorkMatch = $this->detectIWork($zip);
+
+            if ($iWorkMatch !== null) {
+                return $iWorkMatch;
+            }
         } finally {
             $zip->close();
         }
 
         return null;
+    }
+
+    private function detectIWork(ZipArchive $zip): ?MimeTypeMatch
+    {
+        return match ((new IWorkArchiveInspector())->detect($zip)) {
+            'key' => $this->match('key', 'application/vnd.apple.keynote'),
+            'numbers' => $this->match('numbers', 'application/vnd.apple.numbers'),
+            'pages' => $this->match('pages', 'application/vnd.apple.pages'),
+            default => null,
+        };
     }
 
     private static function zipArchiveAvailable(): bool

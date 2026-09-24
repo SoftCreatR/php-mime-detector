@@ -64,12 +64,23 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetMimeType(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('text/plain');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
 
         $this->assertSame('text/plain', $mimeDetector->getMimeType());
+    }
+
+    public function testPreferredMimeTypeKeepsTheOriginalResultAvailable(): void
+    {
+        $resolver = $this->createStub(MimeTypeResolverInterface::class);
+        $resolver->method('getMimeType')->willReturn('audio/x-flac');
+
+        $detector = new MimeDetector($this->testFile, null, null, $resolver);
+
+        $this->assertSame('audio/x-flac', $detector->getMimeType());
+        $this->assertSame('audio/flac', $detector->getPreferredMimeType());
     }
 
     /**
@@ -79,7 +90,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFileExtension(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getFileExtension')->willReturn('txt');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
@@ -95,7 +106,11 @@ class MimeDetectorTest extends TestCase
     public function testGetExtensionForMimeType(): void
     {
         $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
-        $mimeTypeDetectorMock->method('getExtensionForMimeType')->with('audio/mpeg')->willReturn('mp3');
+        $mimeTypeDetectorMock
+            ->expects($this->once())
+            ->method('getExtensionForMimeType')
+            ->with('audio/mpeg')
+            ->willReturn('mp3');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
 
@@ -111,6 +126,7 @@ class MimeDetectorTest extends TestCase
     {
         $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock
+            ->expects($this->once())
             ->method('getMimeTypesForExtension')
             ->with('mp4')
             ->willReturn(['video/mp4', 'audio/mpeg']);
@@ -127,7 +143,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testListAllMimeTypes(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('listAllMimeTypes')->willReturn([
             'audio/mpeg' => ['mp2', 'mp3', 'mp4'],
         ]);
@@ -146,7 +162,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFileHash(): void
     {
-        $fileHandlerMock = $this->createMock(FileHandler::class);
+        $fileHandlerMock = $this->createStub(FileHandler::class);
         $fileHandlerMock->method('getFileHash')->willReturn('fakehash123');
 
         $mimeDetector = $this->createMimeDetectorWithMocks(null, $fileHandlerMock);
@@ -161,10 +177,10 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetBase64DataURI(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('text/plain');
 
-        $fileHandlerMock = $this->createMock(FileHandler::class);
+        $fileHandlerMock = $this->createStub(FileHandler::class);
         $fileHandlerMock->method('getFileHash')->willReturn($this->testFile);
         $fileHandlerMock->method('getFilePath')->willReturn($this->testFile);
 
@@ -183,10 +199,10 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetBase64DataURIReturnsEmptyWhenMimeTypeMissing(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('');
 
-        $fileHandlerMock = $this->createMock(FileHandler::class);
+        $fileHandlerMock = $this->createStub(FileHandler::class);
         $fileHandlerMock->method('getFileHash')->willReturn($this->testFile);
         $fileHandlerMock->method('getFilePath')->willReturn($this->testFile);
 
@@ -202,10 +218,10 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetBase64DataURIReturnsEmptyWhenFileIsUnreadable(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('text/plain');
 
-        $fileHandlerMock = $this->createMock(FileHandler::class);
+        $fileHandlerMock = $this->createStub(FileHandler::class);
         $fileHandlerMock->method('getFileHash')->willReturn('/path/does/not/exist');
         $fileHandlerMock->method('getFilePath')->willReturn('/path/does/not/exist');
 
@@ -224,10 +240,10 @@ class MimeDetectorTest extends TestCase
         $emptyFile = \tempnam(\sys_get_temp_dir(), 'mime-empty-');
         \file_put_contents($emptyFile, '');
 
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('text/plain');
 
-        $fileHandlerMock = $this->createMock(FileHandler::class);
+        $fileHandlerMock = $this->createStub(FileHandler::class);
         $fileHandlerMock->method('getFileHash')->willReturn($emptyFile);
         $fileHandlerMock->method('getFilePath')->willReturn($emptyFile);
 
@@ -247,10 +263,10 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetBase64DataURIReturnsEmptyWhenFilePathUnavailable(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('text/plain');
 
-        $fileHandlerMock = $this->createMock(FileHandler::class);
+        $fileHandlerMock = $this->createStub(FileHandler::class);
         $fileHandlerMock
             ->method('getFileHash')
             ->willReturn($this->testFile);
@@ -270,7 +286,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFontAwesomeIconReturnsDefault(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('application/octet-stream');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
@@ -285,7 +301,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFontAwesomeIconHandlesEmptyMimeType(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
@@ -300,7 +316,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFontAwesomeIconForImage(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('image/jpeg');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
@@ -315,7 +331,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFontAwesomeIconForAudio(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('audio/mpeg');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
@@ -330,7 +346,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFontAwesomeIconForVideo(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('video/mp4');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
@@ -345,7 +361,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFontAwesomeIconWithFixedWidth(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('image/png');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);
@@ -441,7 +457,7 @@ class MimeDetectorTest extends TestCase
      */
     public function testGetFontAwesomeIconForTextSubtype(): void
     {
-        $mimeTypeDetectorMock = $this->createMock(MimeTypeResolverInterface::class);
+        $mimeTypeDetectorMock = $this->createStub(MimeTypeResolverInterface::class);
         $mimeTypeDetectorMock->method('getMimeType')->willReturn('text/calendar');
 
         $mimeDetector = $this->createMimeDetectorWithMocks($mimeTypeDetectorMock);

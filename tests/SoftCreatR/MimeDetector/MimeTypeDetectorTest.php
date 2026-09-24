@@ -44,7 +44,7 @@ class MimeTypeDetectorTest extends TestCase
     public function testDetectFileProvidesMatchAndFileType(): void
     {
         $file = \tempnam(\sys_get_temp_dir(), 'mime-type-');
-        \file_put_contents($file, '<?xml <svg></svg>');
+        \file_put_contents($file, '<?xml version="1.0"?><svg></svg>');
 
         try {
             $detector = new MimeTypeDetector($file);

@@ -111,6 +111,10 @@ final class MediaSignatureDetectorTest extends TestCase
      */
     public static function provideAdditionalMediaSamples(): iterable
     {
+        $asfHeader = "\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9\x00\xAA\x00\x62\xCE\x6C";
+        $videoStream = "\xC0\xEF\x19\xBC\x4D\x5B\xCF\x11\xA8\xFD\x00\x80\x5F\x5C\x44\x2B";
+        $audioStream = "\x40\x9E\x69\xF8\x4D\x5B\xCF\x11\xA8\xFD\x00\x80\x5F\x5C\x44\x2B";
+
         return [
             'mp-plus' => ['MP+' . \str_repeat("\0", 2), 'mpc', 'audio/x-musepack'],
             'ac3' => ["\x0B\x77" . \str_repeat("\0", 10), 'ac3', 'audio/vnd.dolby.dd-raw'],
@@ -126,7 +130,9 @@ final class MediaSignatureDetectorTest extends TestCase
             'wav' => ['RIFF' . \str_repeat("\0", 4) . 'WAVE', 'wav', 'audio/vnd.wave'],
             'qcp' => ['RIFF' . \str_repeat("\0", 4) . 'QLCM', 'qcp', 'audio/qcelp'],
             'ani' => ['RIFF' . \str_repeat("\0", 4) . 'ACON', 'ani', 'application/x-navi-animation'],
-            'wmv' => ["\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9", 'wmv', 'video/x-ms-wmv'],
+            'wmv' => [$asfHeader . $videoStream, 'wmv', 'video/x-ms-wmv'],
+            'wma' => [$asfHeader . $audioStream, 'wma', 'audio/x-ms-wma'],
+            'asf' => [$asfHeader . \str_repeat("\0", 16), 'asf', 'video/x-ms-asf'],
             'mpg-pack' => ["\x00\x00\x01\xBA" . \str_repeat("\0", 4), 'mpg', 'video/mpeg'],
             'mpg-sequence' => ["\x00\x00\x01\xB3" . \str_repeat("\0", 4), 'mpg', 'video/mpeg'],
             '3gp-signature' => ["\x00\x00\x00\x10ftyp3g" . \str_repeat("\0", 2), '3gp', 'video/3gpp'],

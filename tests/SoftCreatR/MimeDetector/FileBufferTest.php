@@ -79,7 +79,7 @@ class FileBufferTest extends TestCase
 
     public function testProvidesStringSlicesOfTheCachedBytes(): void
     {
-        $handler = $this->createMock(ByteCacheHandler::class);
+        $handler = $this->createStub(ByteCacheHandler::class);
         $handler->method('getByteCache')->willReturn([65, 66, 67, 68]);
 
         $buffer = new FileBuffer($handler);

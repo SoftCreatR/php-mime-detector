@@ -51,6 +51,19 @@ final class ZipSignatureDetectorTest extends TestCase
         $this->assertSame('application/zip', $match->mimeType());
     }
 
+    public function testAmbiguousIWorkArchiveFallsBackToZip(): void
+    {
+        foreach (['invalid', "\0\x03\0\0\x81\x80\x04"] as $document) {
+            $match = $this->detectFromEntries([
+                'Index/Document.iwa' => $document,
+                'Index/Tables/DataList.iwa' => '',
+            ]);
+
+            $this->assertInstanceOf(MimeTypeMatch::class, $match);
+            $this->assertSame('zip', $match->extension());
+        }
+    }
+
     public function testDetectsRawContentMarkers(): void
     {
         foreach ($this->rawContentCases() as $label => [$payload, $extension, $mimeType]) {

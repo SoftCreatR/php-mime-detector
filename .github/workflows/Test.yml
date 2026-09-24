@@ -5,12 +5,14 @@ on:
     paths:
       - '**.php'
       - 'composer.json'
+      - 'tests/SoftCreatR/MimeDetector/fixtures'
     branches:
       - 'main'
   pull_request:
     paths:
       - '**.php'
       - 'composer.json'
+      - 'tests/SoftCreatR/MimeDetector/fixtures'
     branches:
       - 'main'
   workflow_dispatch:
@@ -20,13 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: [ '8.1', '8.2', '8.3', '8.4', '8.5' ]
-    continue-on-error: ${{ matrix.php == '8.5' }}
+        php: [ '8.1', '8.2', '8.3', '8.4', '8.5', '8.6' ]
+    continue-on-error: ${{ matrix.php == '8.6' }}
     name: PHP ${{ matrix.php }} Test
 
     steps:
       - name: Git checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Checkout submodules
         run: git submodule update --init --recursive
@@ -52,6 +54,6 @@ jobs:
         run: composer test -- --coverage-clover=coverage.xml
 
       - name: Run codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

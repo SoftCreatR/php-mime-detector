@@ -12,6 +12,7 @@ namespace SoftCreatR\MimeDetector\Detector;
 
 use SoftCreatR\MimeDetector\Attribute\DetectorCategory;
 use SoftCreatR\MimeDetector\Detection\DetectionContext;
+use SoftCreatR\MimeDetector\Detection\FileBuffer;
 use SoftCreatR\MimeDetector\Detection\MimeTypeMatch;
 
 /**
@@ -32,7 +33,9 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         }
 
         if ($buffer->checkForBytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
-            return $this->match('png', 'image/png');
+            return $this->isAnimatedPng($buffer)
+                ? $this->match('apng', 'image/apng')
+                : $this->match('png', 'image/png');
         }
 
         if ($buffer->checkForBytes([0x47, 0x49, 0x46])) {
@@ -65,6 +68,12 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
             $buffer->checkForBytes([0x49, 0x49, 0x2A, 0x0])
             || $buffer->checkForBytes([0x4D, 0x4D, 0x0, 0x2A])
         ) {
+            $rawMatch = $this->detectTiffRaw($buffer);
+
+            if ($rawMatch !== null) {
+                return $rawMatch;
+            }
+
             return $this->match('tif', 'image/tiff');
         }
 
@@ -175,5 +184,154 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         }
 
         return null;
+    }
+
+    private function isAnimatedPng(FileBuffer $buffer): bool
+    {
+        if ($buffer->sliceAsString(8, 8) !== "\x00\x00\x00\x0DIHDR") {
+            return false;
+        }
+
+        $offset = 33;
+
+        for ($chunk = 1; $chunk < 128 && $offset + 12 <= $buffer->length(); $chunk++) {
+            $lengthBytes = $buffer->sliceAsString($offset, 4);
+            $length = \unpack('N', $lengthBytes)[1];
+            $type = $buffer->sliceAsString($offset + 4, 4);
+
+            if ($length > $buffer->length() - $offset - 12) {
+                return false;
+            }
+
+            if ($type === 'IDAT') {
+                return false;
+            }
+
+            if ($type === 'acTL') {
+                return $length === 8;
+            }
+
+            $offset += $length + 12;
+        }
+
+        return false;
+    }
+
+    private function detectTiffRaw(FileBuffer $buffer): ?MimeTypeMatch
+    {
+        $littleEndian = $buffer->checkString('II');
+        $ifdOffset = $this->readTiffLong($buffer, 4, $littleEndian);
+
+        if ($ifdOffset === null || $ifdOffset < 8 || $ifdOffset + 2 > $buffer->length()) {
+            return null;
+        }
+
+        $tagCount = $this->readTiffShort($buffer, $ifdOffset, $littleEndian);
+
+        if ($tagCount === null || $tagCount > 256) {
+            return null;
+        }
+
+        return $this->scanTiffTags($buffer, $ifdOffset, $tagCount, $littleEndian);
+    }
+
+    private function scanTiffTags(FileBuffer $buffer, int $ifdOffset, int $tagCount, bool $littleEndian): ?MimeTypeMatch
+    {
+        $hasNikonMake = false;
+        $hasSubIfds = false;
+        $hasSonyMake = false;
+        $hasPrintIm = false;
+
+        for ($i = 0; $i < $tagCount; $i++) {
+            $tagOffset = $ifdOffset + 2 + $i * 12;
+
+            if ($tagOffset + 12 > $buffer->length()) {
+                break;
+            }
+
+            $tag = $this->readTiffShort($buffer, $tagOffset, $littleEndian);
+
+            if ($tag === 50341) {
+                $hasPrintIm = true;
+            }
+
+            if ($tag === 50706) {
+                return $this->match('dng', 'image/x-adobe-dng');
+            }
+
+            if ($this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'NIKON')) {
+                $hasNikonMake = true;
+            }
+
+            if ($this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'SONY')) {
+                $hasSonyMake = true;
+            }
+
+            if ($tag === 330) {
+                $hasSubIfds = true;
+            }
+        }
+
+        if ($hasPrintIm && $hasSonyMake) {
+            return $this->match('arw', 'image/x-sony-arw');
+        }
+
+        if ($this->isNefTiff($buffer, $hasNikonMake, $hasSubIfds)) {
+            return $this->match('nef', 'image/x-nikon-nef');
+        }
+
+        return null;
+    }
+
+    private function isNefTiff(FileBuffer $buffer, bool $hasNikonMake, bool $hasSubIfds): bool
+    {
+        return $hasNikonMake && $hasSubIfds && $this->hasNefHeader($buffer);
+    }
+
+    private function hasNefHeader(FileBuffer $buffer): bool
+    {
+        return $buffer->checkForBytes([0x1C, 0x00, 0xFE, 0x00], 8)
+            || $buffer->checkForBytes([0x1F, 0x00, 0x0B, 0x00], 8)
+            || $buffer->checkForBytes([0x00, 0x1C, 0x00, 0xFE], 8)
+            || $buffer->checkForBytes([0x00, 0x1F, 0x00, 0x0B], 8);
+    }
+
+    private function isMakeTag(?int $tag, FileBuffer $buffer, int $offset, bool $littleEndian, string $make): bool
+    {
+        if ($tag !== 271 || $this->readTiffShort($buffer, $offset + 2, $littleEndian) !== 2) {
+            return false;
+        }
+
+        $length = $this->readTiffLong($buffer, $offset + 4, $littleEndian);
+        $valueOffset = $this->readTiffLong($buffer, $offset + 8, $littleEndian);
+
+        if ($length === null || $length < \strlen($make) || $length > 256 || $valueOffset === null) {
+            return false;
+        }
+
+        return \strtoupper($buffer->sliceAsString($valueOffset, \strlen($make))) === $make;
+    }
+
+    private function readTiffLong(FileBuffer $buffer, int $offset, bool $littleEndian): ?int
+    {
+        $bytes = $buffer->sliceAsString($offset, 4);
+
+        if (\strlen($bytes) !== 4) {
+            return null;
+        }
+
+        return \unpack($littleEndian ? 'V' : 'N', $bytes)[1];
+    }
+
+    private function readTiffShort(FileBuffer $buffer, int $offset, bool $littleEndian): ?int
+    {
+        $first = $buffer->get($offset);
+        $second = $buffer->get($offset + 1);
+
+        if ($first === null || $second === null) {
+            return null;
+        }
+
+        return $littleEndian ? $first | ($second << 8) : ($first << 8) | $second;
     }
 }
