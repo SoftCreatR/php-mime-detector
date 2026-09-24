@@ -59,7 +59,7 @@ class FileHandlerTest extends TestCase
         }
     }
 
-    public function testSetFileThrowsExceptionWhenHashingFails(): void
+    public function testGetFileHashThrowsExceptionWhenHashingFails(): void
     {
         $this->expectException(MimeDetectorException::class);
         $this->expectExceptionMessage("Unable to calculate the hash");
@@ -73,6 +73,7 @@ class FileHandlerTest extends TestCase
         try {
             $fileHandler = new FileHandler();
             $fileHandler->setFile('filehandler-hashfail://file.txt');
+            $fileHandler->getFileHash();
         } finally {
             \restore_error_handler();
             \stream_wrapper_unregister('filehandler-hashfail');
@@ -89,6 +90,16 @@ class FileHandlerTest extends TestCase
 
         $expectedHash = \hash_file('crc32b', $this->testFile);
         $this->assertSame($expectedHash, $fileHandler->getFileHash());
+    }
+
+    public function testHashingAFileRemovedAfterRegistrationFails(): void
+    {
+        $handler = new FileHandler();
+        $handler->setFile($this->testFile);
+        \unlink($this->testFile);
+
+        $this->expectException(MimeDetectorException::class);
+        $handler->getFileHash();
     }
 
     /**

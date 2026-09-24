@@ -49,5 +49,15 @@ class MimeTypeRepositoryTest extends TestCase
 
         $this->assertNotEmpty($repository->getMimeTypesForExtension('mp4'));
         $this->assertContains('mp4', $repository->getExtensionsForMimeType('video/mp4'));
+        $this->assertSame('wav', $repository->getExtensionForMimeType('audio/x-wav'));
+        $this->assertSame('wma', $repository->getExtensionForMimeType('audio/x-ms-wma'));
+        $this->assertSame('cfb', $repository->getExtensionForMimeType('application/x-cfb'));
+    }
+
+    public function testKnownAliasResolvesInACustomRepository(): void
+    {
+        $repository = new MimeTypeRepository(['wav' => ['audio/vnd.wave']]);
+
+        $this->assertSame(['wav'], $repository->getExtensionsForMimeType('audio/x-wav'));
     }
 }

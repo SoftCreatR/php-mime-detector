@@ -81,23 +81,87 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
 
     private function detectXmlFamily(string $snippet): MimeTypeMatch
     {
-        if (\str_contains($snippet, '<!doctype svg') || \str_contains($snippet, '<svg')) {
-            return $this->match('svg', 'image/svg+xml');
+        // Inspect the document element only. A later <svg> inside HTML or an
+        // XML comment must not change the type of the whole document.
+        $doctype = null;
+        $withoutProlog = $this->stripProlog($snippet, $doctype);
+
+        if (!\preg_match('/\A<([a-z][a-z0-9_.:-]*)\b/', $withoutProlog, $matches)) {
+            return $this->matchDoctypeOrXml($doctype);
         }
 
-        if (\str_contains($snippet, '<!doctype html') || \str_contains($snippet, '<html')) {
-            return $this->match('html', 'text/html');
+        return match ($matches[1]) {
+            'svg' => $this->match('svg', 'image/svg+xml'),
+            'html' => $this->match('html', 'text/html'),
+            'rdf:rdf', 'x:xmpmeta' => $this->match('rdf', 'application/rdf+xml'),
+            'rss' => $this->match('rss', 'application/rss+xml'),
+            'kml' => $this->match('kml', 'application/vnd.google-earth.kml+xml'),
+            'gpx' => $this->match('gpx', 'application/gpx+xml'),
+            default => $this->matchDoctypeOrXml($doctype),
+        };
+    }
+
+    private function matchDoctypeOrXml(?string $doctype): MimeTypeMatch
+    {
+        return $doctype === 'html'
+            ? $this->match('html', 'text/html')
+            : $this->match('xml', 'application/xml');
+    }
+
+    private function stripProlog(string $snippet, ?string &$doctype): string
+    {
+        while (true) {
+            $snippet = $this->ltrimAsciiWhitespace($snippet);
+
+            if (\preg_match('/\A(?:<\?[^>]*\?>|<!--.*?-->)/s', $snippet, $matches)) {
+                $snippet = \substr($snippet, \strlen($matches[0]));
+                continue;
+            }
+
+            if (\preg_match('/\A<!doctype\s+([a-z][a-z0-9_.:-]*)\b/', $snippet, $matches)) {
+                $end = $this->findDoctypeEnd($snippet);
+
+                if ($end !== null) {
+                    $doctype = $matches[1];
+                    $snippet = \substr($snippet, $end);
+                    continue;
+                }
+            }
+
+            return $snippet;
+        }
+    }
+
+    private function findDoctypeEnd(string $snippet): ?int
+    {
+        $quote = null;
+        $subsetDepth = 0;
+
+        for ($i = 0, $length = \strlen($snippet); $i < $length; $i++) {
+            $char = $snippet[$i];
+
+            if ($quote !== null) {
+                $quote = $this->continueQuote($quote, $char);
+                continue;
+            }
+
+            if ($char === '"' || $char === "'") {
+                $quote = $char;
+            } elseif ($char === '[') {
+                $subsetDepth++;
+            } elseif ($char === ']') {
+                $subsetDepth = \max(0, $subsetDepth - 1);
+            } elseif ($char === '>' && $subsetDepth === 0) {
+                return $i + 1;
+            }
         }
 
-        if (\str_contains($snippet, '<x:xmpmeta') || \str_contains($snippet, '<rdf:rdf')) {
-            return $this->match('rdf', 'application/rdf+xml');
-        }
+        return null;
+    }
 
-        if (\str_contains($snippet, '<rss version="2.0"')) {
-            return $this->match('rss', 'application/rss+xml');
-        }
-
-        return $this->match('xml', 'application/xml');
+    private function continueQuote(string $quote, string $char): ?string
+    {
+        return $char === $quote ? null : $quote;
     }
 
     private function startsWithXmlDeclaration(string $snippet): bool
