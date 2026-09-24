@@ -257,7 +257,7 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
                 return $this->match('dng', 'image/x-adobe-dng');
             }
 
-            if ($tag === 271 && $this->isNikonMakeTag($buffer, $tagOffset, $littleEndian)) {
+            if ($this->isNikonMakeTag($tag, $buffer, $tagOffset, $littleEndian)) {
                 $hasNikonMake = true;
             }
 
@@ -281,9 +281,9 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
             || $buffer->checkForBytes([0x00, 0x1F, 0x00, 0x0B], 8);
     }
 
-    private function isNikonMakeTag(FileBuffer $buffer, int $offset, bool $littleEndian): bool
+    private function isNikonMakeTag(?int $tag, FileBuffer $buffer, int $offset, bool $littleEndian): bool
     {
-        if ($this->readTiffShort($buffer, $offset + 2, $littleEndian) !== 2) {
+        if ($tag !== 271 || $this->readTiffShort($buffer, $offset + 2, $littleEndian) !== 2) {
             return false;
         }
 
