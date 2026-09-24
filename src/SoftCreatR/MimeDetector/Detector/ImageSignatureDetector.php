@@ -251,24 +251,20 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
 
             $tag = $this->readTiffShort($buffer, $tagOffset, $littleEndian);
 
-            if ($tag === 50341) {
-                $hasPrintIm = true;
-            }
-
-            if ($tag === 50706) {
-                return $this->match('dng', 'image/x-adobe-dng');
-            }
-
-            if ($this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'NIKON')) {
-                $hasNikonMake = true;
-            }
-
-            if ($this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'SONY')) {
-                $hasSonyMake = true;
-            }
-
-            if ($tag === 330) {
-                $hasSubIfds = true;
+            switch ($tag) {
+                case 50341:
+                    $hasPrintIm = true;
+                    break;
+                case 50706:
+                    return $this->match('dng', 'image/x-adobe-dng');
+                case 271:
+                    $hasNikonMake = $hasNikonMake
+                        || $this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'NIKON');
+                    $hasSonyMake = $hasSonyMake
+                        || $this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'SONY');
+                    break;
+                case 330:
+                    $hasSubIfds = true;
             }
         }
 

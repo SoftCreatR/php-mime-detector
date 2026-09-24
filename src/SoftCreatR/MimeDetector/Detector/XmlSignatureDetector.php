@@ -152,8 +152,8 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
                 $quote = $char;
             } elseif ($char === '[') {
                 $subsetDepth++;
-            } elseif ($char === ']' && $subsetDepth > 0) {
-                $subsetDepth--;
+            } elseif ($char === ']') {
+                $subsetDepth = \max(0, $subsetDepth - 1);
             } elseif ($char === '>' && $subsetDepth === 0) {
                 return $i + 1;
             }
