@@ -141,10 +141,7 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
             $char = $snippet[$i];
 
             if ($quote !== null) {
-                if ($char === $quote) {
-                    $quote = null;
-                }
-
+                $quote = $this->continueQuote($quote, $char);
                 continue;
             }
 
@@ -160,6 +157,11 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
         }
 
         return null;
+    }
+
+    private function continueQuote(string $quote, string $char): ?string
+    {
+        return $char === $quote ? null : $quote;
     }
 
     private function startsWithXmlDeclaration(string $snippet): bool

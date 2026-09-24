@@ -258,16 +258,24 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
                 case 50706:
                     return $this->match('dng', 'image/x-adobe-dng');
                 case 271:
-                    $hasNikonMake = $hasNikonMake
-                        || $this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'NIKON');
-                    $hasSonyMake = $hasSonyMake
-                        || $this->isMakeTag($tag, $buffer, $tagOffset, $littleEndian, 'SONY');
+                    $hasNikonMake = $this->hasMakeTag($hasNikonMake, $buffer, $tagOffset, $littleEndian, 'NIKON');
+                    $hasSonyMake = $this->hasMakeTag($hasSonyMake, $buffer, $tagOffset, $littleEndian, 'SONY');
                     break;
                 case 330:
                     $hasSubIfds = true;
             }
         }
 
+        return $this->classifyTiffTags($buffer, $hasNikonMake, $hasSubIfds, $hasSonyMake, $hasPrintIm);
+    }
+
+    private function classifyTiffTags(
+        FileBuffer $buffer,
+        bool $hasNikonMake,
+        bool $hasSubIfds,
+        bool $hasSonyMake,
+        bool $hasPrintIm
+    ): ?MimeTypeMatch {
         if ($hasPrintIm && $hasSonyMake) {
             return $this->match('arw', 'image/x-sony-arw');
         }
@@ -277,6 +285,16 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         }
 
         return null;
+    }
+
+    private function hasMakeTag(
+        bool $alreadyFound,
+        FileBuffer $buffer,
+        int $offset,
+        bool $littleEndian,
+        string $make
+    ): bool {
+        return $alreadyFound || $this->isMakeTag(271, $buffer, $offset, $littleEndian, $make);
     }
 
     private function isNefTiff(FileBuffer $buffer, bool $hasNikonMake, bool $hasSubIfds): bool
