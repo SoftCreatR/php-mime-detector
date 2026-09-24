@@ -52,6 +52,9 @@ final class KnownFixtureDetectionTest extends TestCase
         ];
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.StaticAccess) This uses the public repository factory.
+     */
     public function testAllFixtureResultsAreInTheDefaultCatalogue(): void
     {
         $directory = __DIR__ . '/fixtures';

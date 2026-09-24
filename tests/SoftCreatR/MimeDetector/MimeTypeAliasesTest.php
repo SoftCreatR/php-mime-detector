@@ -7,6 +7,9 @@ namespace SoftCreatR\Tests\MimeDetector;
 use PHPUnit\Framework\TestCase;
 use SoftCreatR\MimeDetector\MimeTypeAliases;
 
+/**
+ * @SuppressWarnings(PHPMD.StaticAccess) The public alias API is static by design.
+ */
 final class MimeTypeAliasesTest extends TestCase
 {
     public function testKnownNamesCompareAsTheSameFormat(): void

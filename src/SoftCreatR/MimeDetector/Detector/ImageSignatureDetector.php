@@ -188,10 +188,13 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
 
     private function isAnimatedPng(FileBuffer $buffer): bool
     {
-        $offset = 8;
-        $sawHeader = false;
+        if ($buffer->sliceAsString(8, 8) !== "\x00\x00\x00\x0DIHDR") {
+            return false;
+        }
 
-        for ($chunk = 0; $chunk < 128 && $offset + 12 <= $buffer->length(); $chunk++) {
+        $offset = 33;
+
+        for ($chunk = 1; $chunk < 128 && $offset + 12 <= $buffer->length(); $chunk++) {
             $lengthBytes = $buffer->sliceAsString($offset, 4);
             $length = \unpack('N', $lengthBytes)[1];
             $type = $buffer->sliceAsString($offset + 4, 4);
@@ -200,16 +203,12 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
                 return false;
             }
 
-            if (!$sawHeader) {
-                if ($type !== 'IHDR' || $length !== 13) {
-                    return false;
-                }
-
-                $sawHeader = true;
-            } elseif ($type === 'IDAT') {
+            if ($type === 'IDAT') {
                 return false;
-            } elseif ($type === 'acTL' && $length === 8) {
-                return true;
+            }
+
+            if ($type === 'acTL') {
+                return $length === 8;
             }
 
             $offset += $length + 12;
@@ -223,17 +222,7 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         $littleEndian = $buffer->checkString('II');
         $ifdOffset = $this->readTiffLong($buffer, 4, $littleEndian);
 
-        if ($ifdOffset === null) {
-            return null;
-        }
-
-        $looksLikeNef =
-            $buffer->checkForBytes([0x1C, 0x00, 0xFE, 0x00], 8)
-            || $buffer->checkForBytes([0x1F, 0x00, 0x0B, 0x00], 8)
-            || $buffer->checkForBytes([0x00, 0x1C, 0x00, 0xFE], 8)
-            || $buffer->checkForBytes([0x00, 0x1F, 0x00, 0x0B], 8);
-
-        if ($ifdOffset < 8 || $ifdOffset + 2 > $buffer->length()) {
+        if ($ifdOffset === null || $ifdOffset < 8 || $ifdOffset + 2 > $buffer->length()) {
             return null;
         }
 
@@ -243,6 +232,11 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
             return null;
         }
 
+        return $this->scanTiffTags($buffer, $ifdOffset, $tagCount, $littleEndian);
+    }
+
+    private function scanTiffTags(FileBuffer $buffer, int $ifdOffset, int $tagCount, bool $littleEndian): ?MimeTypeMatch
+    {
         $hasNikonMake = false;
         $hasSubIfds = false;
 
@@ -272,11 +266,19 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
             }
         }
 
-        if ($looksLikeNef && $hasNikonMake && $hasSubIfds) {
+        if ($hasNikonMake && $hasSubIfds && $this->hasNefHeader($buffer)) {
             return $this->match('nef', 'image/x-nikon-nef');
         }
 
         return null;
+    }
+
+    private function hasNefHeader(FileBuffer $buffer): bool
+    {
+        return $buffer->checkForBytes([0x1C, 0x00, 0xFE, 0x00], 8)
+            || $buffer->checkForBytes([0x1F, 0x00, 0x0B, 0x00], 8)
+            || $buffer->checkForBytes([0x00, 0x1C, 0x00, 0xFE], 8)
+            || $buffer->checkForBytes([0x00, 0x1F, 0x00, 0x0B], 8);
     }
 
     private function isNikonMakeTag(FileBuffer $buffer, int $offset, bool $littleEndian): bool

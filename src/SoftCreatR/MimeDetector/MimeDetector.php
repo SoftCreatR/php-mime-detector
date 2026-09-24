@@ -51,6 +51,8 @@ class MimeDetector
 
     /**
      * Return a preferred media type spelling without changing getMimeType().
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) The alias utility has no state.
      */
     public function getPreferredMimeType(): string
     {

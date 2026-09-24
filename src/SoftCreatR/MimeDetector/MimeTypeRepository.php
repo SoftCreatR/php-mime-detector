@@ -87,6 +87,7 @@ final class MimeTypeRepository
 
     /**
      * @return list<string>
+     * @SuppressWarnings(PHPMD.StaticAccess) The alias utility has no state.
      */
     public function getExtensionsForMimeType(string $mimeType): array
     {

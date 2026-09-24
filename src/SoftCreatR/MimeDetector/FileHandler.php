@@ -64,6 +64,7 @@ class FileHandler
      * Retrieve or calculate the checksum of the registered file.
      *
      * @throws MimeDetectorException When the file cannot be hashed.
+     * @SuppressWarnings(PHPMD.StaticAccess) Exception factories are used throughout this class.
      */
     public function getFileHash(): string
     {
