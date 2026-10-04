@@ -9,7 +9,8 @@ file structure and apply upload policy separately when handling untrusted files.
 ## Features
 
 - **Real file inspection** – identifies file formats by signature instead of
-  relying on filenames. You can find a list of supported file formats in the
+  relying on filenames. See the [supported file types](docs/supported-file-types.md)
+  for detection results, MIME aliases and variant coverage, also available in the
   [Wiki](https://github.com/SoftCreatR/php-mime-detector/wiki/Supported-file-types).
 - **Composable architecture** – category-specific detectors can be swapped in
   or extended without touching the core.
