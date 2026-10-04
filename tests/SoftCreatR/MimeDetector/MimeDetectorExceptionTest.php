@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ class MimeDetectorExceptionTest extends TestCase
 
         $this->assertSame(
             'Maximum byte cache length "' . $maxLength . '" must not be smaller than 4.',
-            $exception->getMessage()
+            $exception->getMessage(),
         );
     }
 

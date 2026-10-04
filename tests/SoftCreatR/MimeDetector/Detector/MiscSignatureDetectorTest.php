@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -127,7 +127,7 @@ final class MiscSignatureDetectorTest extends TestCase
 
         return [
             'blend' => ['BLENDER', 'blend', 'application/x-blender'],
-            'sqlite' => ['SQLi' . \str_repeat("\0", 2), 'sqlite', 'application/x-sqlite3'],
+            'sqlite' => ["SQLite format 3\0", 'sqlite', 'application/x-sqlite3'],
             'g3drem' => ['g3drem' . \str_repeat("\0", 2), 'g3drem', 'application/octet-stream'],
             'studio3' => ['silhouette05' . \str_repeat("\0", 2), 'studio3', 'application/octet-stream'],
             'draco' => ['DRACO' . \str_repeat("\0", 4), 'drc', 'application/vnd.google.draco'],
@@ -142,6 +142,8 @@ final class MiscSignatureDetectorTest extends TestCase
             'icc' => [$icc, 'icc', 'application/vnd.iccprofile'],
             'pcap' => ["\xD4\xC3\xB2\xA1", 'pcap', 'application/vnd.tcpdump.pcap'],
             'pcap-be' => ["\xA1\xB2\xC3\xD4", 'pcap', 'application/vnd.tcpdump.pcap'],
+            'pcap-nanosecond' => ["\x4D\x3C\xB2\xA1", 'pcap', 'application/vnd.tcpdump.pcap'],
+            'pcap-nanosecond-be' => ["\xA1\xB2\x3C\x4D", 'pcap', 'application/vnd.tcpdump.pcap'],
             'dat' => ['regf' . \str_repeat("\0", 4), 'dat', 'application/x-ft-windows-registry-hive'],
             'alias' => [
                 "\x62\x6F\x6F\x6B\x00\x00\x00\x00\x6D\x61\x72\x6B\x00\x00\x00\x00",
@@ -182,6 +184,26 @@ final class MiscSignatureDetectorTest extends TestCase
         }
 
         return $encoded;
+    }
+
+    public function testRejectsTruncatedAndInvalidDatabaseOrCaptureHeaders(): void
+    {
+        $pcapng = \pack('V3v2', 0x0A0D0D0A, 28, 0x1A2B3C4D, 1, 0) . \str_repeat("\xFF", 8) . \pack('V', 28);
+
+        foreach (
+            [
+                'SQLi is ordinary text',
+                'SQLite format 2',
+                'SQLite format 3',
+                \substr($pcapng, 0, 27),
+                \substr_replace($pcapng, "\0\0\0\0", 8, 4),
+                \substr_replace($pcapng, \pack('V', 24), 4, 4),
+                \substr_replace($pcapng, \pack('V', 29), 4, 4),
+                \substr_replace($pcapng, \pack('v', 2), 12, 2),
+            ] as $data
+        ) {
+            $this->assertNull($this->detect(new MiscSignatureDetector(), $data));
+        }
     }
 
     /**

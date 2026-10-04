@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -27,6 +27,46 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
     public function detect(DetectionContext $context): ?MimeTypeMatch
     {
         $buffer = $context->buffer();
+
+        if ($this->isQoi($buffer)) {
+            return $this->match('qoi', 'image/x-qoi');
+        }
+
+        if (
+            $buffer->length() >= 128
+            && $buffer->checkString("DDS \x7C\0\0\0")
+            && $buffer->checkString("\x20\0\0\0", 76)
+            && $this->readUint32($buffer, 12, true) > 0
+            && $this->readUint32($buffer, 16, true) > 0
+        ) {
+            return $this->match('dds', 'image/vnd-ms.dds');
+        }
+
+        if (
+            $buffer->length() >= 8
+            && $buffer->checkString("\x76\x2F\x31\x01\x02")
+            && (($this->readUint32($buffer, 4, true) ?? 0) & ~0x1E02) === 0
+        ) {
+            return $this->match('exr', 'image/x-exr');
+        }
+
+        if (
+            $buffer->checkString('AT&TFORM')
+            && $this->readUint32($buffer, 8, false) >= 4
+            && \in_array($buffer->sliceAsString(12, 4), ['DJVU', 'DJVM', 'DJVI', 'THUM'], true)
+        ) {
+            return $this->match('djvu', 'image/vnd.djvu');
+        }
+
+        $netpbm = $this->detectNetpbm($buffer);
+
+        if ($netpbm !== null) {
+            return $netpbm;
+        }
+
+        if ($buffer->checkString("\xFF\xD8\xFF\xF7")) {
+            return $this->match('jls', 'image/jls');
+        }
 
         if ($buffer->checkForBytes([0xFF, 0xD8, 0xFF])) {
             return $this->match('jpg', 'image/jpeg');
@@ -186,6 +226,51 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         return null;
     }
 
+    private function isQoi(FileBuffer $buffer): bool
+    {
+        return $buffer->length() >= 14
+            && $buffer->checkString('qoif')
+            && $this->readUint32($buffer, 4, false) > 0
+            && $this->readUint32($buffer, 8, false) > 0
+            && \in_array($buffer->get(12), [3, 4], true)
+            && \in_array($buffer->get(13), [0, 1], true);
+    }
+
+    private function detectNetpbm(FileBuffer $buffer): ?MimeTypeMatch
+    {
+        if ($buffer->get(0) !== 0x50 || !\in_array($buffer->get(1), [49, 50, 51, 52, 53, 54], true)) {
+            return null;
+        }
+
+        $header = \preg_replace('/#[^\r\n]*/', '', $buffer->sliceAsString(0, 4096));
+
+        if (
+            !\preg_match('/\AP([1-6])\s+([0-9]{1,10})\s+([0-9]{1,10})\s/', $header ?? '', $fields)
+            || (int) $fields[2] < 1
+            || (int) $fields[3] < 1
+        ) {
+            return null;
+        }
+
+        $kind = (int) $fields[1];
+
+        if ($kind !== 1 && $kind !== 4) {
+            if (
+                !\preg_match('/\AP[2356]\s+[0-9]+\s+[0-9]+\s+([0-9]{1,5})\s/', $header, $maximum)
+                || (int) $maximum[1] < 1
+                || (int) $maximum[1] > 65535
+            ) {
+                return null;
+            }
+        }
+
+        return match ($kind) {
+            1, 4 => $this->match('pbm', 'image/x-portable-bitmap'),
+            2, 5 => $this->match('pgm', 'image/x-portable-graymap'),
+            3, 6 => $this->match('ppm', 'image/x-portable-pixmap'),
+        };
+    }
+
     private function isAnimatedPng(FileBuffer $buffer): bool
     {
         if ($buffer->sliceAsString(8, 8) !== "\x00\x00\x00\x0DIHDR") {
@@ -220,7 +305,7 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
     private function detectTiffRaw(FileBuffer $buffer): ?MimeTypeMatch
     {
         $littleEndian = $buffer->checkString('II');
-        $ifdOffset = $this->readTiffLong($buffer, 4, $littleEndian);
+        $ifdOffset = $this->readUint32($buffer, 4, $littleEndian);
 
         if ($ifdOffset === null || $ifdOffset < 8 || $ifdOffset + 2 > $buffer->length()) {
             return null;
@@ -254,12 +339,14 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
             switch ($tag) {
                 case 50341:
                     $hasPrintIm = true;
+
                     break;
                 case 50706:
                     return $this->match('dng', 'image/x-adobe-dng');
                 case 271:
                     $hasNikonMake = $this->hasMakeTag($hasNikonMake, $buffer, $tagOffset, $littleEndian, 'NIKON');
                     $hasSonyMake = $this->hasMakeTag($hasSonyMake, $buffer, $tagOffset, $littleEndian, 'SONY');
+
                     break;
                 case 330:
                     $hasSubIfds = true;
@@ -274,7 +361,7 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         bool $hasNikonMake,
         bool $hasSubIfds,
         bool $hasSonyMake,
-        bool $hasPrintIm
+        bool $hasPrintIm,
     ): ?MimeTypeMatch {
         if ($hasPrintIm && $hasSonyMake) {
             return $this->match('arw', 'image/x-sony-arw');
@@ -292,7 +379,7 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         FileBuffer $buffer,
         int $offset,
         bool $littleEndian,
-        string $make
+        string $make,
     ): bool {
         return $alreadyFound || $this->isMakeTag(271, $buffer, $offset, $littleEndian, $make);
     }
@@ -316,8 +403,8 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
             return false;
         }
 
-        $length = $this->readTiffLong($buffer, $offset + 4, $littleEndian);
-        $valueOffset = $this->readTiffLong($buffer, $offset + 8, $littleEndian);
+        $length = $this->readUint32($buffer, $offset + 4, $littleEndian);
+        $valueOffset = $this->readUint32($buffer, $offset + 8, $littleEndian);
 
         if ($length === null || $length < \strlen($make) || $length > 256 || $valueOffset === null) {
             return false;
@@ -326,7 +413,7 @@ final class ImageSignatureDetector extends AbstractSignatureDetector
         return \strtoupper($buffer->sliceAsString($valueOffset, \strlen($make))) === $make;
     }
 
-    private function readTiffLong(FileBuffer $buffer, int $offset, bool $littleEndian): ?int
+    private function readUint32(FileBuffer $buffer, int $offset, bool $littleEndian): ?int
     {
         $bytes = $buffer->sliceAsString($offset, 4);
 

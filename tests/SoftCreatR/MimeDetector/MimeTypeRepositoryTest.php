@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -59,5 +59,20 @@ class MimeTypeRepositoryTest extends TestCase
         $repository = new MimeTypeRepository(['wav' => ['audio/vnd.wave']]);
 
         $this->assertSame(['wav'], $repository->getExtensionsForMimeType('audio/x-wav'));
+    }
+
+    public function testAliasesResolveWhenOnlyALegacyNameWasRegistered(): void
+    {
+        $repository = new MimeTypeRepository(['wav' => ['audio/x-wav']]);
+        $repository->register('wave', 'audio/vnd.wave');
+        $repository->register('wav', 'audio/wav');
+
+        foreach (['audio/wav', 'audio/x-wav', 'audio/vnd.wave', ' AUDIO/WAV; codecs=pcm '] as $mime) {
+            $this->assertSame(['wav', 'wave'], $repository->getExtensionsForMimeType($mime));
+        }
+
+        $this->assertSame(['audio/wav', 'audio/x-wav'], $repository->getMimeTypesForExtension('wav'));
+        $this->assertSame(['wav'], $repository->all()['audio/x-wav']);
+        $this->assertSame([], $repository->getExtensionsForMimeType('audio/ogg'));
     }
 }

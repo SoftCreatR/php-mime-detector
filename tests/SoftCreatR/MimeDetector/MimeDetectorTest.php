@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -482,7 +482,7 @@ class MimeDetectorTest extends TestCase
      */
     private function createMimeDetectorWithMocks(
         ?MimeTypeResolverInterface $mimeTypeDetectorMock = null,
-        ?FileHandler $fileHandlerMock = null
+        ?FileHandler $fileHandlerMock = null,
     ): MimeDetector {
         $mimeDetector = new MimeDetector($this->testFile, null, null, $mimeTypeDetectorMock);
 

@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -71,7 +71,7 @@ class MimeTypeDetectorTest extends TestCase
     {
         $detector = new MimeTypeDetector(__FILE__);
 
-        $this->assertSame('mp2', $detector->getExtensionForMimeType('audio/mpeg'));
+        $this->assertSame('mp1', $detector->getExtensionForMimeType('audio/mpeg'));
     }
 
     /**
@@ -81,7 +81,7 @@ class MimeTypeDetectorTest extends TestCase
     {
         $detector = new MimeTypeDetector(__FILE__);
 
-        $this->assertSame(['audio/mpeg', 'video/mp4'], $detector->getMimeTypesForExtension('mp4'));
+        $this->assertSame(['audio/mp4', 'video/mp4'], $detector->getMimeTypesForExtension('mp4'));
     }
 
     /**
@@ -141,6 +141,7 @@ class MimeTypeDetectorTest extends TestCase
      * Provides valid test files with their expected extensions and MIME types.
      *
      * @return array
+     *
      * @throws MimeDetectorException
      */
     public static function provideTestFiles(): array
@@ -149,6 +150,7 @@ class MimeTypeDetectorTest extends TestCase
 
         // Iterate over the fixtures directory to get test files
         $fixturesPath = __DIR__ . '/fixtures';
+
         if (\is_dir($fixturesPath)) {
             foreach (new DirectoryIterator($fixturesPath) as $file) {
                 if (!$file->isFile() || $file->getBasename() === '.git' || $file->getBasename() === '.gitattributes') {
@@ -186,7 +188,7 @@ class MimeTypeDetectorTest extends TestCase
     {
         $file = \tempnam(\sys_get_temp_dir(), 'mime-fallback-');
         \file_put_contents($file, \base64_decode(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9p91Zs8AAAAASUVORK5CYII='
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9p91Zs8AAAAASUVORK5CYII=',
         ));
         \register_shutdown_function(static fn() => \is_string($file) ? @\unlink($file) : null);
 

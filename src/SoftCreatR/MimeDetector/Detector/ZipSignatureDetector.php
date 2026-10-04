@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -163,6 +163,7 @@ final class ZipSignatureDetector extends AbstractSignatureDetector
         }
 
         $archiveMatch = $this->detectWithZipArchive($context);
+
         if ($archiveMatch instanceof MimeTypeMatch) {
             return $archiveMatch;
         }

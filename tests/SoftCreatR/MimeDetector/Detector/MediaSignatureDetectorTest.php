@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -31,6 +31,33 @@ final class MediaSignatureDetectorTest extends TestCase
         $match = $this->detect($detector, $data);
 
         $this->assertNull($match);
+    }
+
+    public function testRejectsInvalidFrameAndTagHeaders(): void
+    {
+        foreach (
+            [
+                "\xFF\xFEW\0i\0n\0d\0o\0w\0s\0",
+                "\xFF\xFE<\0?\0x\0m\0l\0",
+                "\xFF\xF1\x50\x80\0\0\0",
+                "\xFF\xF1\x7C\x80\x01\x3F\xFC",
+                "\xFF\xEB\x90\0",
+                "\xFF\xFB\xFC\0",
+                "\xFF\xFB\x9C\0",
+                "ID3\x04\0\0\x80\0\0\0\xFF\xFB\x90\0",
+                "ID3\x04\0\0\x7F\x7F\x7F\x7F\xFF\xFB\x90\0",
+                "ID3\x04\0\0\0\0\0\0",
+            ] as $data
+        ) {
+            $this->assertNull($this->detect(new MediaSignatureDetector(), $data));
+        }
+    }
+
+    public function testDetectsAudioAfterId3Footer(): void
+    {
+        $data = "ID3\x04\0\x10\0\0\0\0" . "3DI\x04\0\x10\0\0\0\0" . "\xFF\xFB\x90\0";
+
+        $this->assertSame('mp3', $this->detect(new MediaSignatureDetector(), $data)?->extension());
     }
 
     public function testDefaultsToOgxForUnknownOggStreams(): void
@@ -141,11 +168,11 @@ final class MediaSignatureDetectorTest extends TestCase
             's3m' => [self::createS3mSample(), 's3m', 'audio/x-s3m'],
             'xm' => ['Extended Module:' . \str_repeat("\0", 4), 'xm', 'audio/x-xm'],
             'voc' => ['Creative Voice File' . \str_repeat("\0", 2), 'voc', 'audio/x-voc'],
-            'mp3-id3' => [\str_pad('ID3', 20, "\0"), 'mp3', 'audio/mpeg'],
+            'mp3-id3' => ["ID3\x04\0\0\0\0\0\0\xFF\xFB\x90\0", 'mp3', 'audio/mpeg'],
             'mp3-ffe2' => ["\xFF\xE2" . \str_repeat("\0", 18), 'mp3', 'audio/mpeg'],
             'mp2-ffe4' => ["\xFF\xE4" . \str_repeat("\0", 18), 'mp2', 'audio/mpeg'],
-            'mp2-fff8' => ["\xFF\xF8" . \str_repeat("\0", 18), 'mp2', 'audio/mpeg'],
-            'mp4-audio' => ["\xFF\xF0" . \str_repeat("\0", 18), 'mp4', 'audio/mpeg'],
+            'mp2-fff4' => ["\xFF\xF4" . \str_repeat("\0", 18), 'mp2', 'audio/mpeg'],
+            'AAC ADTS' => ["\xFF\xF1\x50\x80\x01\x3F\xFC\0\0", 'aac', 'audio/aac'],
             'm4a-audio-marker' => ["\x00\x00\x00\x0BftypM4A", 'm4a', 'audio/mp4'],
             'opus' => ['OggS' . \str_repeat("\0", 24) . 'OpusHead', 'opus', 'audio/opus'],
             'ogv' => ['OggS' . \str_repeat("\0", 24) . "\x80theora", 'ogv', 'video/ogg'],

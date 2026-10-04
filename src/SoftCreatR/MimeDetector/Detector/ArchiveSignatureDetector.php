@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -60,8 +60,20 @@ final class ArchiveSignatureDetector extends AbstractSignatureDetector
             return $this->match('7z', 'application/x-7z-compressed');
         }
 
-        if ($buffer->checkForBytes([0x78, 0x01])) {
+        if ($this->isAppleDiskImage($context)) {
             return $this->match('dmg', 'application/x-apple-diskimage');
+        }
+
+        $compression = $buffer->get(0);
+        $flags = $buffer->get(1);
+
+        if (
+            $compression !== null && $flags !== null
+            && ($compression & 15) === 8 && ($compression >> 4) <= 7
+            && (($compression << 8) | $flags) % 31 === 0
+            && $buffer->length() >= 6
+        ) {
+            return $this->match('zlib', 'application/zlib');
         }
 
         if (
@@ -109,6 +121,10 @@ final class ArchiveSignatureDetector extends AbstractSignatureDetector
             return $this->match('lz4', 'application/x-lz4');
         }
 
+        if ($buffer->length() >= 38 && $buffer->checkString("\x89LZO\0\r\n\x1A\n")) {
+            return $this->match('lzo', 'application/x-lzop');
+        }
+
         if (
             $buffer->checkString('**ACE', 7)
             && $buffer->checkString('**', 12)
@@ -129,6 +145,32 @@ final class ArchiveSignatureDetector extends AbstractSignatureDetector
         }
 
         return null;
+    }
+
+    private function isAppleDiskImage(DetectionContext $context): bool
+    {
+        $handle = @\fopen($context->file(), 'rb');
+
+        if ($handle === false) {
+            return false;
+        }
+
+        try {
+            $stat = \fstat($handle);
+
+            if ($stat === false || $stat['size'] < 512 || @\fseek($handle, $stat['size'] - 512) !== 0) {
+                return false;
+            }
+
+            $footer = @\fread($handle, 12);
+
+            return \is_string($footer)
+                && \strlen($footer) === 12
+                && \substr($footer, 0, 4) === 'koly'
+                && \substr($footer, 8, 4) === "\0\0\x02\0";
+        } finally {
+            \fclose($handle);
+        }
     }
 
     private function isIso9660Image(DetectionContext $context): bool
@@ -208,6 +250,7 @@ final class ArchiveSignatureDetector extends AbstractSignatureDetector
 
             if ($i >= 148 && $i < 156) {
                 $sum += 0x20;
+
                 continue;
             }
 

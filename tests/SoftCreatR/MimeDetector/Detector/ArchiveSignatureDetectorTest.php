@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -25,6 +25,30 @@ use SoftCreatR\MimeDetector\MimeDetectorException;
  */
 final class ArchiveSignatureDetectorTest extends TestCase
 {
+    public function testZlibPrefixDoesNotEstablishAnAppleDiskImage(): void
+    {
+        $data = \base64_decode('eJxzVCjOTczJUUhPzUstSixJTVGoyslMUiguKUpNzNUDAKeFCvU=');
+        $match = $this->detect(new ArchiveSignatureDetector(), $data);
+
+        $this->assertSame('zlib', $match?->extension());
+        $this->assertSame('application/zlib', $match?->mimeType());
+    }
+
+    public function testRejectsTruncatedOrInvalidAdditionalArchiveHeaders(): void
+    {
+        foreach (
+            [
+                "\x78\x01",
+                "\x78\x02" . \str_repeat("\0", 16),
+                "\x89LZO\0\r\n\x1A\n",
+                'data' . 'koly' . \str_repeat("\0", 508),
+                'data' . 'koly' . \pack('N2', 4, 511) . \str_repeat("\0", 500),
+            ] as $data
+        ) {
+            $this->assertNull($this->detect(new ArchiveSignatureDetector(), $data));
+        }
+    }
+
     public function testDetectsZstandardArchives(): void
     {
         $detector = new ArchiveSignatureDetector();
@@ -161,7 +185,7 @@ final class ArchiveSignatureDetectorTest extends TestCase
     private function detectFromSyntheticBuffer(
         ArchiveSignatureDetector $detector,
         array $bytes,
-        int $length
+        int $length,
     ): ?MimeTypeMatch {
         $reflection = new ReflectionClass(ByteCacheHandler::class);
         /** @var ByteCacheHandler $handler */
@@ -185,7 +209,7 @@ final class ArchiveSignatureDetectorTest extends TestCase
         ReflectionClass $reflection,
         ByteCacheHandler $handler,
         string $property,
-        mixed $value
+        mixed $value,
     ): void {
         $prop = $reflection->getProperty($property);
         $prop->setValue($handler, $value);

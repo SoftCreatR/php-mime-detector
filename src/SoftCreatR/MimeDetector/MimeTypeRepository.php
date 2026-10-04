@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -15,11 +15,20 @@ namespace SoftCreatR\MimeDetector;
  */
 final class MimeTypeRepository
 {
-    /** @var array<string, list<string>> */
+    /**
+     * @var array<string, list<string>>
+     */
     private array $extensionToMime = [];
 
-    /** @var array<string, list<string>> */
+    /**
+     * @var array<string, list<string>>
+     */
     private array $mimeToExtension = [];
+
+    /**
+     * @var array<string, list<string>>
+     */
+    private array $preferredMimeToExtension = [];
 
     /**
      * @param array<string, list<string>> $map
@@ -41,6 +50,8 @@ final class MimeTypeRepository
 
     /**
      * Register a relationship between an extension and one or more MIME types.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) The alias utility has no state.
      */
     public function register(string $extension, string ...$mimeTypes): void
     {
@@ -52,6 +63,17 @@ final class MimeTypeRepository
         }
 
         foreach ($mimeTypes as $mimeType) {
+            $preferred = MimeTypeAliases::preferred($mimeType);
+
+            if (!isset($this->preferredMimeToExtension[$preferred])) {
+                $this->preferredMimeToExtension[$preferred] = [];
+            }
+
+            if (!\in_array($extension, $this->preferredMimeToExtension[$preferred], true)) {
+                $this->preferredMimeToExtension[$preferred][] = $extension;
+                \sort($this->preferredMimeToExtension[$preferred]);
+            }
+
             if (!isset($this->mimeToExtension[$mimeType])) {
                 $this->mimeToExtension[$mimeType] = [];
             }
@@ -87,15 +109,12 @@ final class MimeTypeRepository
 
     /**
      * @return list<string>
+     *
      * @SuppressWarnings(PHPMD.StaticAccess) The alias utility has no state.
      */
     public function getExtensionsForMimeType(string $mimeType): array
     {
-        $mimeType = \strtolower($mimeType);
-
-        return $this->mimeToExtension[$mimeType]
-            ?? $this->mimeToExtension[MimeTypeAliases::preferred($mimeType)]
-            ?? [];
+        return $this->preferredMimeToExtension[MimeTypeAliases::preferred($mimeType)] ?? [];
     }
 
     /**
@@ -116,6 +135,7 @@ final class MimeTypeRepository
             '3gp' => ['video/3gpp'],
             '3mf' => ['model/3mf'],
             '7z' => ['application/x-7z-compressed'],
+            'aac' => ['audio/aac'],
             'ac3' => ['audio/vnd.dolby.dd-raw'],
             'ace' => ['application/x-ace-compressed'],
             'aif' => ['audio/aiff', 'audio/x-aiff'],
@@ -149,6 +169,8 @@ final class MimeTypeRepository
             'crx' => ['application/x-google-chrome-extension'],
             'cur' => ['image/x-icon'],
             'dat' => ['application/x-ft-windows-registry-hive'],
+            'dds' => ['image/vnd-ms.dds'],
+            'djvu' => ['image/vnd.djvu'],
             'dcm' => ['application/dicom'],
             'deb' => ['application/x-deb', 'application/vnd.debian.binary-package'],
             'dmg' => ['application/x-apple-diskimage'],
@@ -164,7 +186,8 @@ final class MimeTypeRepository
             'eot' => ['application/vnd.ms-fontobject'],
             'eps' => ['application/eps'],
             'epub' => ['application/epub+zip'],
-            'exe' => ['application/x-msdownload'],
+            'exe' => ['application/x-msdownload', 'application/vnd.microsoft.portable-executable'],
+            'exr' => ['image/x-exr'],
             'f4a' => ['audio/mp4'],
             'f4b' => ['audio/mp4'],
             'f4p' => ['video/mp4'],
@@ -190,6 +213,7 @@ final class MimeTypeRepository
             'j2c' => ['image/j2c'],
             'jar' => ['application/java-archive'],
             'jp2' => ['image/jp2'],
+            'jls' => ['image/jls'],
             'jpg' => ['image/jpeg'],
             'jpm' => ['image/jpm'],
             'jpx' => ['image/jpx'],
@@ -202,6 +226,7 @@ final class MimeTypeRepository
             'luac' => ['application/x-lua-bytecode'],
             'lz' => ['application/x-lzip'],
             'lz4' => ['application/x-lz4'],
+            'lzo' => ['application/x-lzop'],
             'lzh' => ['application/x-lzh-compressed'],
             'm4a' => ['audio/mp4', 'audio/x-m4a'],
             'm4b' => ['audio/mp4'],
@@ -214,9 +239,10 @@ final class MimeTypeRepository
             'mkv' => ['video/x-matroska'],
             'mobi' => ['application/x-mobipocket-ebook'],
             'mov' => ['video/quicktime'],
+            'mp1' => ['audio/mpeg'],
             'mp2' => ['audio/mpeg'],
             'mp3' => ['audio/mpeg'],
-            'mp4' => ['audio/mpeg', 'video/mp4'],
+            'mp4' => ['audio/mp4', 'video/mp4'],
             'mpc' => ['audio/x-musepack'],
             'mpg' => ['video/mpeg'],
             'msi' => ['application/x-msi'],
@@ -243,8 +269,11 @@ final class MimeTypeRepository
             'ott' => ['application/vnd.oasis.opendocument.text-template'],
             'pages' => ['application/vnd.apple.pages'],
             'parquet' => ['application/vnd.apache.parquet'],
+            'pbm' => ['image/x-portable-bitmap'],
+            'pcapng' => ['application/x-pcapng'],
             'pcap' => ['application/vnd.tcpdump.pcap'],
             'pdf' => ['application/pdf'],
+            'pgm' => ['image/x-portable-graymap'],
             'pgp' => ['application/pgp-encrypted'],
             'png' => ['image/png'],
             'potm' => ['application/vnd.ms-powerpoint.template.macroenabled.12'],
@@ -253,9 +282,11 @@ final class MimeTypeRepository
             'ppsx' => ['application/vnd.openxmlformats-officedocument.presentationml.slideshow'],
             'pptm' => ['application/vnd.ms-powerpoint.presentation.macroenabled.12'],
             'pptx' => ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+            'ppm' => ['image/x-portable-pixmap'],
             'ps' => ['application/postscript'],
             'psd' => ['image/vnd.adobe.photoshop'],
             'pst' => ['application/vnd.ms-outlook'],
+            'qoi' => ['image/x-qoi'],
             'qcp' => ['audio/qcelp'],
             'raf' => ['image/x-fujifilm-raf'],
             'rar' => ['application/x-rar-compressed', 'application/x-rar', 'application/vnd.rar'],
@@ -268,6 +299,7 @@ final class MimeTypeRepository
             'rw2' => ['image/x-panasonic-rw2'],
             's3m' => ['audio/x-s3m'],
             'shp' => ['application/x-esri-shape'],
+            'skp' => ['application/vnd.sketchup.skp'],
             'spx' => ['audio/ogg'],
             'sqlite' => ['application/x-sqlite3'],
             'stl' => ['model/stl'],
@@ -306,6 +338,7 @@ final class MimeTypeRepository
             'xz' => ['application/x-xz'],
             'z' => ['application/x-compress'],
             'zip' => ['application/zip'],
+            'zlib' => ['application/zlib'],
             'zst' => ['application/zstd'],
         ];
     }

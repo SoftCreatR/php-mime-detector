@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -79,7 +79,7 @@ class ByteCacheHandlerTest extends TestCase
         $this->assertEquals(4096, $byteCacheHandler->getMaxByteCacheLen());
         $this->assertEquals(
             \strlen('This is a test string for byte cache testing.'),
-            $byteCacheHandler->getByteCacheLen()
+            $byteCacheHandler->getByteCacheLen(),
         );
     }
 

@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
             return $this->match('blend', 'application/x-blender');
         }
 
-        if ($buffer->checkForBytes([0x53, 0x51, 0x4C, 0x69])) {
+        if ($buffer->checkString("SQLite format 3\0")) {
             return $this->match('sqlite', 'application/x-sqlite3');
         }
 
@@ -48,6 +48,13 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
 
         if ($buffer->checkForBytes([0x44, 0x52, 0x41, 0x43, 0x4F])) {
             return $this->match('drc', 'application/vnd.google.draco');
+        }
+
+        if (
+            $buffer->checkString("\xFF\xFE\xFF\x0E")
+            && $this->checkUtf16LeString($buffer, 'SketchUp Model', 4)
+        ) {
+            return $this->match('skp', 'application/vnd.sketchup.skp');
         }
 
         if ($this->isMie($buffer)) {
@@ -85,8 +92,14 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
         if (
             $buffer->checkForBytes([0xD4, 0xC3, 0xB2, 0xA1])
             || $buffer->checkForBytes([0xA1, 0xB2, 0xC3, 0xD4])
+            || $buffer->checkForBytes([0x4D, 0x3C, 0xB2, 0xA1])
+            || $buffer->checkForBytes([0xA1, 0xB2, 0x3C, 0x4D])
         ) {
             return $this->match('pcap', 'application/vnd.tcpdump.pcap');
+        }
+
+        if ($this->isPcapNg($buffer)) {
+            return $this->match('pcapng', 'application/x-pcapng');
         }
 
         if ($buffer->checkString('regf')) {
@@ -95,7 +108,7 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
 
         if (
             $buffer->checkForBytes(
-                [0x62, 0x6F, 0x6F, 0x6B, 0x00, 0x00, 0x00, 0x00, 0x6D, 0x61, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00]
+                [0x62, 0x6F, 0x6F, 0x6B, 0x00, 0x00, 0x00, 0x00, 0x6D, 0x61, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00],
             )
         ) {
             return $this->match('alias', 'application/x.apple.alias');
@@ -174,6 +187,25 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
             && ($buffer->checkForBytes([0x7E, 0x10, 0x04]) || $buffer->checkForBytes([0x7E, 0x18, 0x04]));
     }
 
+    private function isPcapNg(FileBuffer $buffer): bool
+    {
+        if ($buffer->length() < 28 || !$buffer->checkString("\x0A\x0D\x0D\x0A")) {
+            return false;
+        }
+
+        $littleEndian = $buffer->checkString("\x4D\x3C\x2B\x1A", 8);
+
+        if (!$littleEndian && !$buffer->checkString("\x1A\x2B\x3C\x4D", 8)) {
+            return false;
+        }
+
+        $length = \unpack($littleEndian ? 'V' : 'N', $buffer->sliceAsString(4, 4))[1];
+
+        return $length >= 28
+            && $length % 4 === 0
+            && $buffer->checkString($littleEndian ? "\x01\0\0\0" : "\0\x01\0\0", 12);
+    }
+
     private function isDwg(FileBuffer $buffer): bool
     {
         if (!$buffer->checkString('AC')) {
@@ -184,6 +216,7 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
 
         for ($i = 2; $i < 6; $i++) {
             $byte = $buffer->get($i);
+
             if ($byte === null) {
                 return false;
             }
@@ -195,7 +228,7 @@ final class MiscSignatureDetector extends AbstractSignatureDetector
             return false;
         }
 
-        $numeric = (int)$version;
+        $numeric = (int) $version;
 
         return $numeric >= 1000 && $numeric <= 1050;
     }

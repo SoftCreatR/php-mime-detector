@@ -1,0 +1,740 @@
+{
+    "sources": {
+        "shared-mime-info": {
+            "url": "https://sources.debian.org/data/main/s/shared-mime-info/2.4-5/data/freedesktop.org.xml.in",
+            "sha256": "d8deef937f79334f99e3131740105fca4bb99db9ffbb43ab5068ff862f9e5431"
+        },
+        "libmagic": {
+            "url": "https://github.com/file/file/tree/5e57b94cdd3f2bc2f6db8581dcce76a89fc9c9f7/magic/Magdir"
+        },
+        "webkit": {
+            "url": "https://github.com/WebKit/WebKit/blob/main/Source/WebCore/platform/MIMETypeRegistry.cpp",
+            "sha256": "b7f4cebbe7f96ba19a3ade63348f2521e6afae1d412b06c0bf9c25f1f35bb164"
+        },
+        "iana": "https://www.iana.org/assignments/media-types/media-types.xhtml",
+        "font": "https://www.rfc-editor.org/rfc/rfc8081"
+    },
+    "reviewedCatalogue": [
+        "application/avro",
+        "application/dicom",
+        "application/eps",
+        "application/epub+zip",
+        "application/gpx+xml",
+        "application/gzip",
+        "application/java-archive",
+        "application/java-vm",
+        "application/mxf",
+        "application/octet-stream",
+        "application/ogg",
+        "application/pdf",
+        "application/pgp-encrypted",
+        "application/postscript",
+        "application/rdf+xml",
+        "application/rss+xml",
+        "application/rtf",
+        "application/unicorn",
+        "application/vnd.android.package-archive",
+        "application/vnd.apache.arrow.file",
+        "application/vnd.apache.parquet",
+        "application/vnd.apple.keynote",
+        "application/vnd.apple.numbers",
+        "application/vnd.apple.pages",
+        "application/vnd.debian.binary-package",
+        "application/vnd.google-earth.kml+xml",
+        "application/vnd.google.draco",
+        "application/vnd.iccprofile",
+        "application/vnd.microsoft.portable-executable",
+        "application/vnd.ms-asf",
+        "application/vnd.ms-cab-compressed",
+        "application/vnd.ms-excel",
+        "application/vnd.ms-excel.sheet.macroenabled.12",
+        "application/vnd.ms-excel.template.macroenabled.12",
+        "application/vnd.ms-fontobject",
+        "application/vnd.ms-htmlhelp",
+        "application/vnd.ms-outlook",
+        "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+        "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+        "application/vnd.ms-powerpoint.template.macroenabled.12",
+        "application/vnd.ms-visio.template.main+xml",
+        "application/vnd.ms-word.document.macroenabled.12",
+        "application/vnd.ms-word.template.macroenabled.12",
+        "application/vnd.oasis.opendocument.graphics",
+        "application/vnd.oasis.opendocument.graphics-template",
+        "application/vnd.oasis.opendocument.presentation",
+        "application/vnd.oasis.opendocument.presentation-template",
+        "application/vnd.oasis.opendocument.spreadsheet",
+        "application/vnd.oasis.opendocument.spreadsheet-template",
+        "application/vnd.oasis.opendocument.text",
+        "application/vnd.oasis.opendocument.text-template",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+        "application/vnd.openxmlformats-officedocument.presentationml.template",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+        "application/vnd.rar",
+        "application/vnd.rn-realmedia",
+        "application/vnd.sketchup.skp",
+        "application/vnd.tcpdump.pcap",
+        "application/vnd.visio",
+        "application/wasm",
+        "application/x-7z-compressed",
+        "application/x-ace-compressed",
+        "application/x-apple-diskimage",
+        "application/x-arj",
+        "application/x-asar",
+        "application/x-blender",
+        "application/x-bzip2",
+        "application/x-cfb",
+        "application/x-compress",
+        "application/x-cpio",
+        "application/x-deb",
+        "application/x-elf",
+        "application/x-esri-shape",
+        "application/x-ft-windows-registry-hive",
+        "application/x-google-chrome-extension",
+        "application/x-indesign",
+        "application/x-iso9660-image",
+        "application/x-lua-bytecode",
+        "application/x-lz4",
+        "application/x-lzh-compressed",
+        "application/x-lzip",
+        "application/x-lzop",
+        "application/x-mach-binary",
+        "application/x-mie",
+        "application/x-mobipocket-ebook",
+        "application/x-ms-regedit",
+        "application/x-msdownload",
+        "application/x-msi",
+        "application/x-navi-animation",
+        "application/x-nintendo-nes-rom",
+        "application/x-pcapng",
+        "application/x-rar",
+        "application/x-rar-compressed",
+        "application/x-rpm",
+        "application/x-shockwave-flash",
+        "application/x-sqlite3",
+        "application/x-tar",
+        "application/x-unix-archive",
+        "application/x-xpinstall",
+        "application/x-xz",
+        "application/x.apple.alias",
+        "application/x.autodesk.fbx",
+        "application/x.ms.shortcut",
+        "application/xml",
+        "application/zip",
+        "application/zlib",
+        "application/zstd",
+        "audio/aac",
+        "audio/aiff",
+        "audio/amr",
+        "audio/ape",
+        "audio/basic",
+        "audio/flac",
+        "audio/midi",
+        "audio/mp4",
+        "audio/mpeg",
+        "audio/ogg",
+        "audio/opus",
+        "audio/qcelp",
+        "audio/vnd.dolby.dd-raw",
+        "audio/vnd.wave",
+        "audio/wav",
+        "audio/wavpack",
+        "audio/x-aiff",
+        "audio/x-dsf",
+        "audio/x-flac",
+        "audio/x-it",
+        "audio/x-m4a",
+        "audio/x-ms-wma",
+        "audio/x-musepack",
+        "audio/x-s3m",
+        "audio/x-voc",
+        "audio/x-wav",
+        "audio/x-xm",
+        "font/collection",
+        "font/otf",
+        "font/ttf",
+        "font/woff",
+        "font/woff2",
+        "image/apng",
+        "image/avif",
+        "image/bmp",
+        "image/bpg",
+        "image/flif",
+        "image/gif",
+        "image/heic",
+        "image/heic-sequence",
+        "image/heif",
+        "image/heif-sequence",
+        "image/icns",
+        "image/j2c",
+        "image/jls",
+        "image/jp2",
+        "image/jpeg",
+        "image/jpm",
+        "image/jpx",
+        "image/jxl",
+        "image/ktx",
+        "image/mj2",
+        "image/png",
+        "image/svg+xml",
+        "image/tiff",
+        "image/vnd-ms.dds",
+        "image/vnd.adobe.photoshop",
+        "image/vnd.djvu",
+        "image/vnd.dwg",
+        "image/vnd.microsoft.icon",
+        "image/vnd.ms-photo",
+        "image/webp",
+        "image/x-adobe-dng",
+        "image/x-canon-cr2",
+        "image/x-canon-cr3",
+        "image/x-exr",
+        "image/x-fujifilm-raf",
+        "image/x-icon",
+        "image/x-nikon-nef",
+        "image/x-olympus-orf",
+        "image/x-panasonic-rw2",
+        "image/x-portable-bitmap",
+        "image/x-portable-graymap",
+        "image/x-portable-pixmap",
+        "image/x-qoi",
+        "image/x-sony-arw",
+        "image/x-xcf",
+        "model/3mf",
+        "model/gltf-binary",
+        "model/stl",
+        "text/calendar",
+        "text/html",
+        "text/rtf",
+        "text/vcard",
+        "text/vtt",
+        "text/xml",
+        "video/3gpp",
+        "video/3gpp2",
+        "video/mp2t",
+        "video/mp4",
+        "video/mpeg",
+        "video/ogg",
+        "video/quicktime",
+        "video/vnd.avi",
+        "video/webm",
+        "video/x-flv",
+        "video/x-m4v",
+        "video/x-matroska",
+        "video/x-ms-asf",
+        "video/x-ms-wmv",
+        "video/x-msvideo"
+    ],
+    "groups": {
+        "application/eps": [
+            "application/x-eps",
+            "image/x-eps"
+        ],
+        "application/gpx+xml": [
+            "application/gpx",
+            "application/x-gpx",
+            "application/x-gpx+xml"
+        ],
+        "application/gzip": [
+            "application/x-gzip"
+        ],
+        "application/java-archive": [
+            "application/x-jar",
+            "application/x-java-archive"
+        ],
+        "application/java-vm": [
+            "application/java-byte-code",
+            "application/x-java",
+            "application/x-java-applet",
+            "application/x-java-class",
+            "application/x-java-vm"
+        ],
+        "application/ogg": [
+            "application/x-ogg"
+        ],
+        "application/pdf": [
+            "application/acrobat",
+            "application/nappdf",
+            "application/x-pdf",
+            "image/pdf"
+        ],
+        "application/rdf+xml": [
+            "text/rdf"
+        ],
+        "application/rss+xml": [
+            "text/rss"
+        ],
+        "application/rtf": [
+            "text/rtf"
+        ],
+        "application/vnd.debian.binary-package": [
+            "application/x-deb",
+            "application/x-debian-package"
+        ],
+        "application/vnd.ms-asf": [
+            "video/x-ms-asf",
+            "video/x-ms-asf-plugin",
+            "video/x-ms-wm"
+        ],
+        "application/vnd.ms-cab-compressed": [
+            "zz-application/zz-winassoc-cab"
+        ],
+        "application/vnd.ms-excel": [
+            "application/msexcel",
+            "application/x-msexcel",
+            "zz-application/zz-winassoc-xls"
+        ],
+        "application/vnd.ms-htmlhelp": [
+            "application/x-chm"
+        ],
+        "application/vnd.rar": [
+            "application/x-rar",
+            "application/x-rar-compressed"
+        ],
+        "application/vnd.sqlite3": [
+            "application/x-sqlite3"
+        ],
+        "application/vnd.tcpdump.pcap": [
+            "application/pcap",
+            "application/x-pcap"
+        ],
+        "application/x-bzip2": [
+            "application/bzip2",
+            "application/x-bzip"
+        ],
+        "application/x-google-chrome-extension": [
+            "application/x-chrome-extension"
+        ],
+        "application/x-lzh-compressed": [
+            "application/x-lha"
+        ],
+        "application/x-ms-regedit": [
+            "text/x-ms-regedit"
+        ],
+        "application/x-nintendo-nes-rom": [
+            "application/x-nes-rom"
+        ],
+        "application/x-rpm": [
+            "application/x-redhat-package-manager"
+        ],
+        "application/x-shockwave-flash": [
+            "application/vnd.adobe.flash.movie"
+        ],
+        "application/x-tar": [
+            "application/x-gtar",
+            "application/x-ustar"
+        ],
+        "application/x-unix-archive": [
+            "application/x-archive"
+        ],
+        "application/x.ms.shortcut": [
+            "application/x-ms-shortcut"
+        ],
+        "application/xml": [
+            "text/xml"
+        ],
+        "application/zip": [
+            "application/x-zip",
+            "application/x-zip-compressed"
+        ],
+        "audio/aac": [
+            "audio/x-aac"
+        ],
+        "audio/aiff": [
+            "audio/x-aiff"
+        ],
+        "audio/amr": [
+            "audio/x-amr"
+        ],
+        "audio/ape": [
+            "audio/x-ape"
+        ],
+        "audio/flac": [
+            "audio/x-flac"
+        ],
+        "audio/midi": [
+            "audio/mid",
+            "audio/x-mid",
+            "audio/x-midi"
+        ],
+        "audio/mp4": [
+            "audio/m4a",
+            "audio/x-m4a",
+            "audio/x-mp4"
+        ],
+        "audio/mpeg": [
+            "audio/mp3",
+            "audio/mpeg3",
+            "audio/mpg",
+            "audio/mpg3",
+            "audio/x-mp3",
+            "audio/x-mpeg",
+            "audio/x-mpeg3",
+            "audio/x-mpg"
+        ],
+        "audio/ogg": [
+            "audio/x-ogg"
+        ],
+        "audio/vnd.wave": [
+            "audio/wav",
+            "audio/x-wav"
+        ],
+        "audio/x-dsf": [
+            "audio/dsf"
+        ],
+        "audio/x-ms-wma": [
+            "audio/wma"
+        ],
+        "font/otf": [
+            "application/x-font-otf"
+        ],
+        "font/sfnt": [
+            "application/font-sfnt"
+        ],
+        "font/ttf": [
+            "application/x-font-ttf"
+        ],
+        "font/woff": [
+            "application/font-woff"
+        ],
+        "image/apng": [
+            "image/vnd.mozilla.apng"
+        ],
+        "image/bmp": [
+            "image/x-bitmap",
+            "image/x-bmp",
+            "image/x-ms-bitmap",
+            "image/x-ms-bmp",
+            "image/x-windows-bmp"
+        ],
+        "image/icns": [
+            "image/x-icns"
+        ],
+        "image/j2c": [
+            "image/x-jp2-codestream"
+        ],
+        "image/jp2": [
+            "image/jpeg2000",
+            "image/jpeg2000-image",
+            "image/x-jpeg2000-image"
+        ],
+        "image/jpeg": [
+            "image/jpg",
+            "image/pjpeg"
+        ],
+        "image/jxr": [
+            "image/vnd.ms-photo"
+        ],
+        "image/mj2": [
+            "video/mj2"
+        ],
+        "image/png": [
+            "image/x-png"
+        ],
+        "image/vnd-ms.dds": [
+            "image/x-dds"
+        ],
+        "image/vnd.adobe.photoshop": [
+            "application/photoshop",
+            "application/x-photoshop",
+            "image/photoshop",
+            "image/psd",
+            "image/x-photoshop",
+            "image/x-psd"
+        ],
+        "image/vnd.microsoft.icon": [
+            "application/ico",
+            "image/ico",
+            "image/icon",
+            "image/x-ico",
+            "image/x-icon",
+            "text/ico"
+        ],
+        "image/x-fujifilm-raf": [
+            "image/x-fuji-raf"
+        ],
+        "image/x-panasonic-rw2": [
+            "image/x-panasonic-raw2"
+        ],
+        "image/x-portable-graymap": [
+            "image/x-portable-greymap"
+        ],
+        "model/3mf": [
+            "application/vnd.ms-3mfdocument"
+        ],
+        "text/calendar": [
+            "application/ics",
+            "text/x-vcalendar"
+        ],
+        "text/vcard": [
+            "text/x-vcard"
+        ],
+        "video/3gpp": [
+            "video/3gp"
+        ],
+        "video/matroska": [
+            "video/x-matroska"
+        ],
+        "video/mp4": [
+            "video/x-m4v"
+        ],
+        "video/mpeg": [
+            "video/mpeg-system",
+            "video/x-mpeg",
+            "video/x-mpeg-system",
+            "video/x-mpeg2"
+        ],
+        "video/ogg": [
+            "video/x-ogg"
+        ],
+        "video/quicktime": [
+            "video/x-quicktime"
+        ],
+        "video/vnd.avi": [
+            "video/avi",
+            "video/msvideo",
+            "video/x-avi",
+            "video/x-msvideo"
+        ],
+        "video/x-flv": [
+            "application/x-flash-video",
+            "flv-application/octet-stream",
+            "video/flv"
+        ]
+    },
+    "excluded": [
+        {
+            "first": "application/pgp-encrypted",
+            "second": "application/pgp",
+            "reason": "Names the PGP family, which also includes keys and signatures."
+        },
+        {
+            "first": "application/x-iso9660-image",
+            "second": "application/x-cd-image",
+            "reason": "Generic CD image name does not identify ISO 9660 specifically."
+        },
+        {
+            "first": "application/java-vm",
+            "second": "application/java",
+            "reason": "Conflicting use for Java class files and Java archives in upstream sources."
+        },
+        {
+            "first": "application/x-shockwave-flash",
+            "second": "application/futuresplash",
+            "reason": "Predecessor format is not identical to SWF."
+        },
+        {
+            "first": "audio/x-dsf",
+            "second": "audio/x-dsd",
+            "reason": "DSD encoding can be carried by DSF or DSDIFF."
+        },
+        {
+            "first": "audio/x-dsf",
+            "second": "audio/dsd",
+            "reason": "DSD encoding can be carried by DSF or DSDIFF."
+        },
+        {
+            "first": "video/mp4",
+            "second": "video/mp4v-es",
+            "reason": "MPEG-4 elementary stream is distinct from an MP4 container."
+        },
+        {
+            "first": "video/3gpp",
+            "second": "audio/3gpp",
+            "reason": "Audio-only is more specific than the video container type."
+        },
+        {
+            "first": "video/3gpp",
+            "second": "video/3gpp-encrypted",
+            "reason": "Encrypted content is distinct from the general container type."
+        },
+        {
+            "first": "video/3gpp",
+            "second": "audio/3gpp-encrypted",
+            "reason": "Encrypted audio is distinct from the general video container type."
+        },
+        {
+            "first": "video/3gpp",
+            "second": "audio/x-rn-3gpp-amr",
+            "reason": "Specific audio codec does not equal the general video container type."
+        },
+        {
+            "first": "video/3gpp",
+            "second": "audio/x-rn-3gpp-amr-encrypted",
+            "reason": "Encrypted audio codec does not equal the general video container type."
+        },
+        {
+            "first": "video/3gpp",
+            "second": "audio/x-rn-3gpp-amr-wb",
+            "reason": "Specific audio codec does not equal the general video container type."
+        },
+        {
+            "first": "video/3gpp",
+            "second": "audio/x-rn-3gpp-amr-wb-encrypted",
+            "reason": "Encrypted audio codec does not equal the general video container type."
+        },
+        {
+            "first": "video/3gpp2",
+            "second": "audio/3gpp2",
+            "reason": "Audio-only is more specific than the video container type."
+        },
+        {
+            "first": "application/vnd.rn-realmedia",
+            "second": "application/vnd.rn-realmedia-vbr",
+            "reason": "Variable-bitrate variant is more specific than generic RealMedia."
+        },
+        {
+            "first": "image/heif",
+            "second": "image/heic",
+            "reason": "HEVC-coded images are more specific than HEIF."
+        },
+        {
+            "first": "image/heif",
+            "second": "image/heic-sequence",
+            "reason": "Sequences and still images have distinct media types."
+        },
+        {
+            "first": "image/heif",
+            "second": "image/heif-sequence",
+            "reason": "Sequences and still images have distinct media types."
+        },
+        {
+            "first": "text/vcard",
+            "second": "text/directory",
+            "reason": "General directory entries are not necessarily vCards."
+        },
+        {
+            "first": "video/vnd.avi",
+            "second": "video/divx",
+            "reason": "Codec-specific label is more specific than generic AVI."
+        },
+        {
+            "first": "video/vnd.avi",
+            "second": "video/vnd.divx",
+            "reason": "Codec-specific label is more specific than generic AVI."
+        },
+        {
+            "first": "application/vnd.apple.keynote",
+            "second": "application/x-iwork-keynote-sffkey",
+            "reason": "Older iWork bundle format differs from modern ZIP archives."
+        },
+        {
+            "first": "application/vnd.apple.numbers",
+            "second": "application/x-iwork-numbers-sffnumbers",
+            "reason": "Older iWork bundle format differs from modern ZIP archives."
+        },
+        {
+            "first": "application/vnd.apple.pages",
+            "second": "application/x-iwork-pages-sffpages",
+            "reason": "Older iWork bundle format differs from modern ZIP archives."
+        },
+        {
+            "first": "model/stl",
+            "second": "model/x.stl-ascii",
+            "reason": "Encoding-specific label is more specific than general STL."
+        },
+        {
+            "first": "model/stl",
+            "second": "model/x.stl-binary",
+            "reason": "Encoding-specific label is more specific than general STL."
+        },
+        {
+            "first": "image/avif",
+            "second": "image/avif-sequence",
+            "reason": "Sequences and still images have distinct media types."
+        },
+        {
+            "first": "application/x-msdownload",
+            "second": "application/vnd.microsoft.portable-executable",
+            "reason": "MZ headers also occur in DOS and NE files; PE requires its own signature."
+        },
+        {
+            "first": "font/ttf",
+            "second": "font/sfnt",
+            "reason": "SFNT is a container shared by multiple font outline formats."
+        },
+        {
+            "first": "font/otf",
+            "second": "application/vnd.ms-opentype",
+            "reason": "OpenType legacy name covers more than the OTTO signature detected here."
+        },
+        {
+            "first": "audio/opus",
+            "second": "audio/ogg",
+            "reason": "Opus codec and Ogg container are distinct."
+        },
+        {
+            "first": "image/apng",
+            "second": "image/png",
+            "reason": "Animated PNG is a distinct registered format."
+        },
+        {
+            "first": "application/zip",
+            "second": "application/java-archive",
+            "reason": "Archive container does not identify its contents."
+        },
+        {
+            "first": "image/tiff",
+            "second": "image/x-adobe-dng",
+            "reason": "RAW image subtype is more specific than TIFF."
+        },
+        {
+            "first": "application/x-iso9660-image",
+            "second": "application/vnd.efi.iso",
+            "reason": "EFI boot images are a specific use of ISO 9660."
+        },
+        {
+            "first": "application/x-msdownload",
+            "second": "application/x-ms-dos-executable",
+            "reason": "Legacy download name also covers PE and NE executables."
+        },
+        {
+            "first": "audio/aac",
+            "second": "audio/x-hx-aac-adts",
+            "reason": "ADTS is one transport format covered by audio/aac; LATM/LOAS is another."
+        },
+        {
+            "first": "audio/aac",
+            "second": "audio/x-hx-aac-adif",
+            "reason": "ADIF transport is not one of the formats in the audio/aac registration."
+        },
+        {
+            "first": "image/x-icon",
+            "second": "image/x-win-bitmap",
+            "reason": "Windows bitmap labels are also used for cursor and other bitmap formats."
+        },
+        {
+            "first": "application/x-elf",
+            "second": "application/x-executable",
+            "reason": "ELF includes shared libraries and object files as well as executables."
+        },
+        {
+            "first": "application/vnd.visio",
+            "second": "application/vnd.ms-visio.drawing.main+xml",
+            "reason": "Modern Visio XML package subtype differs from legacy Visio binaries."
+        },
+        {
+            "first": "application/x-cfb",
+            "second": "application/x-msi",
+            "reason": "Generic compound containers cannot establish that their contents are an MSI."
+        },
+        {
+            "first": "audio/x-it",
+            "second": "audio/x-mod",
+            "reason": "Impulse Tracker modules are a specific module format."
+        },
+        {
+            "first": "audio/x-xm",
+            "second": "audio/x-mod",
+            "reason": "Extended modules are distinct from classic MOD."
+        },
+        {
+            "first": "application/eps",
+            "second": "application/postscript",
+            "reason": "Encapsulated PostScript is a subtype of PostScript."
+        }
+    ]
+}

@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -115,6 +115,7 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
 
             if (\preg_match('/\A(?:<\?[^>]*\?>|<!--.*?-->)/s', $snippet, $matches)) {
                 $snippet = \substr($snippet, \strlen($matches[0]));
+
                 continue;
             }
 
@@ -124,6 +125,7 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
                 if ($end !== null) {
                     $doctype = $matches[1];
                     $snippet = \substr($snippet, $end);
+
                     continue;
                 }
             }
@@ -142,6 +144,7 @@ final class XmlSignatureDetector extends AbstractSignatureDetector
 
             if ($quote !== null) {
                 $quote = $this->continueQuote($quote, $char);
+
                 continue;
             }
 

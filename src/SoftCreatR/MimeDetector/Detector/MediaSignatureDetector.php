@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -29,6 +29,7 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
         $buffer = $context->buffer();
 
         $brandMatch = $this->detectIsoBrandMatch($buffer);
+
         if ($brandMatch instanceof MimeTypeMatch) {
             return $brandMatch;
         }
@@ -151,27 +152,10 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
             return $this->match('3gp', 'video/3gpp');
         }
 
-        $limit = \min(2, \max(0, $buffer->length() - 16));
+        $audio = $this->detectAudio($context);
 
-        for ($offset = 0; $offset < $limit; $offset++) {
-            if (
-                $buffer->checkForBytes([0x49, 0x44, 0x33], $offset)
-                || $buffer->checkForBytes([0xFF, 0xE2], $offset, [0xFF, 0xE2])
-            ) {
-                return $this->match('mp3', 'audio/mpeg');
-            }
-
-            if ($buffer->checkForBytes([0xFF, 0xE4], $offset, [0xFF, 0xE4])) {
-                return $this->match('mp2', 'audio/mpeg');
-            }
-
-            if ($buffer->checkForBytes([0xFF, 0xF8], $offset, [0xFF, 0xFC])) {
-                return $this->match('mp2', 'audio/mpeg');
-            }
-
-            if ($buffer->checkForBytes([0xFF, 0xF0], $offset, [0xFF, 0xFC])) {
-                return $this->match('mp4', 'audio/mpeg');
-            }
+        if ($audio !== null) {
+            return $audio;
         }
 
         if (
@@ -281,6 +265,125 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
         }
 
         return null;
+    }
+
+    private function detectAudio(DetectionContext $context): ?MimeTypeMatch
+    {
+        $buffer = $context->buffer();
+
+        for ($offset = 0; $offset < 2; $offset++) {
+            $header = $buffer->sliceAsString($offset, 32);
+
+            if (\str_starts_with($header, 'ID3')) {
+                return $this->detectTaggedAudio($context, $header, $offset);
+            }
+
+            // UTF-16 text with a BOM can resemble an MPEG frame sync.
+            if (
+                \preg_match(
+                    '/\A(?:\xFF\xFE(?:[\x09\x0A\x0D\x20-\x7E]\x00){3}'
+                    . '|\xFE\xFF(?:\x00[\x09\x0A\x0D\x20-\x7E]){3})/',
+                    $header,
+                )
+            ) {
+                return null;
+            }
+
+            $match = $this->detectAudioHeader($header);
+
+            if ($match !== null) {
+                return $match;
+            }
+        }
+
+        return null;
+    }
+
+    private function detectTaggedAudio(DetectionContext $context, string $header, int $offset): ?MimeTypeMatch
+    {
+        if (\strlen($header) < 10 || !\in_array(\ord($header[3]), [2, 3, 4], true)) {
+            return null;
+        }
+
+        $length = 0;
+
+        for ($index = 6; $index < 10; $index++) {
+            $byte = \ord($header[$index]);
+
+            if ($byte > 127) {
+                return null;
+            }
+
+            $length = ($length << 7) | $byte;
+        }
+
+        $offset += 10 + $length;
+
+        if ($header[3] === "\x04" && (\ord($header[5]) & 0x10) !== 0) {
+            $offset += 10;
+        }
+
+        $audio = $context->buffer()->sliceAsString($offset, 32);
+
+        if (\strlen($audio) < 4) {
+            $handle = @\fopen($context->file(), 'rb');
+
+            if ($handle === false) {
+                return null;
+            }
+
+            try {
+                $stat = \fstat($handle);
+
+                if ($stat === false || $offset > $stat['size'] - 4 || @\fseek($handle, $offset) !== 0) {
+                    return null;
+                }
+
+                $audio = @\fread($handle, 32);
+            } finally {
+                \fclose($handle);
+            }
+        }
+
+        return \is_string($audio) ? $this->detectAudioHeader($audio) : null;
+    }
+
+    private function detectAudioHeader(string $header): ?MimeTypeMatch
+    {
+        if (\str_starts_with($header, 'fLaC')) {
+            return $this->match('flac', 'audio/x-flac');
+        }
+
+        if (\strlen($header) < 4 || \ord($header[0]) !== 0xFF) {
+            return null;
+        }
+
+        $second = \ord($header[1]);
+        $third = \ord($header[2]);
+
+        if (($second & 0xF6) === 0xF0 && \strlen($header) >= 7) {
+            $frameLength = ((\ord($header[3]) & 3) << 11) | (\ord($header[4]) << 3) | (\ord($header[5]) >> 5);
+            $headerLength = ($second & 1) === 1 ? 7 : 9;
+
+            return (($third >> 2) & 15) < 13 && $frameLength >= $headerLength
+                ? $this->match('aac', 'audio/aac')
+                : null;
+        }
+
+        $layer = ($second >> 1) & 3;
+
+        if (
+            ($second & 0xE0) !== 0xE0
+            || (($second >> 3) & 3) === 1
+            || $layer === 0
+            || ($third >> 4) === 15
+            || (($third >> 2) & 3) === 3
+            || (\ord($header[3]) & 3) === 2
+        ) {
+            return null;
+        }
+
+        return $this->match([1 => 'mp3', 2 => 'mp2', 3 => 'mp1'][$layer], 'audio/mpeg');
     }
 
     private function detectIsoBrandMatch(FileBuffer $buffer): ?MimeTypeMatch

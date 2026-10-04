@@ -90,7 +90,10 @@ if (!MimeTypeAliases::equivalent($detected, $fileinfo)) {
 $preferred = $detector->getPreferredMimeType(); // audio/vnd.wave
 ```
 
-The alias list is deliberately conservative. In particular, `audio/ogg` and
+The alias list is audited across the complete bundled catalogue against
+libmagic, shared-mime-info, WebKit, and IANA definitions. See the
+[MIME compatibility audit](docs/mime-compatibility.md) for sources, accepted
+aliases, and excluded comparisons. In particular, `audio/ogg` and
 `audio/opus`, or `font/sfnt` and `font/ttf`, describe different levels of a
 format and are not treated as interchangeable. Unknown names only match when
 their normalized names are identical. The preferred name is not guaranteed to
@@ -126,9 +129,11 @@ specific signature cannot be derived. Unit tests that require `ZipArchive` are
 skipped automatically when the class is not available, so no additional setup is
 needed to run the suite.
 
-ISO 9660 images are identified from their volume descriptor at sector 16. This
-requires a seekable file; an input that cannot be sought falls back to the other
-detectors.
+ISO 9660 images are identified from their volume descriptor at sector 16.
+Apple UDIF disk images use their final 512-byte trailer. PE executables and
+ID3-tagged audio can require a small read beyond the initial cache. These checks
+use bounded reads from seekable files; an input that cannot be sought falls
+back to the other detectors.
 
 ## Extending the detector
 
@@ -305,6 +310,11 @@ composer test
 ```
 
 The fixture corpus lives in the separate `mime-detector-fixtures` repository.
+Run `php tools/compare-fileinfo.php` to compare the complete local corpus with
+PHP's `fileinfo` (requires `ext-fileinfo` for this development tool). Differences
+include format/container distinctions and gaps in either detector; they need
+review before changing an upload policy.
+
 Keeping the submodule means the fixtures are not bundled into Composer installs;
 Git source archives do not include submodule contents. Add new binary fixtures
 there and update the submodule reference when publishing a coordinated change.

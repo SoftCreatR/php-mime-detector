@@ -1,5 +1,6 @@
 # Keep runtime code, Composer metadata, documentation, and the license in dist archives.
 /tests export-ignore
+/tools export-ignore
 /.github export-ignore
 /.gitmodules export-ignore
 /.gitignore export-ignore

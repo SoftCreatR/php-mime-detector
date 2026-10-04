@@ -3,7 +3,7 @@
 /**
  * Mime Detector for PHP.
  *
- * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE  ISC License
+ * @license https://github.com/SoftCreatR/php-mime-detector/blob/main/LICENSE.md  ISC License
  */
 
 declare(strict_types=1);
@@ -42,6 +42,7 @@ final class ImageSignatureDetectorTest extends TestCase
     public static function provideImageSamples(): iterable
     {
         return [
+            'JPEG-LS' => ["\xFF\xD8\xFF\xF7", 'jls', 'image/jls'],
             'avif-sequence' => [
                 "\x00\x00\x00\x18ftypavis" . \str_repeat("\0", 4),
                 'avif',
@@ -67,6 +68,42 @@ final class ImageSignatureDetectorTest extends TestCase
                 'image/tiff',
             ],
             'xcf' => ['gimp xcf ' . \str_repeat("\0", 2), 'xcf', 'image/x-xcf'],
+        ];
+    }
+
+    #[DataProvider('provideInvalidHeaders')]
+    public function testRejectsInvalidNewFormatHeaders(string $data): void
+    {
+        $this->assertNull($this->detect(new ImageSignatureDetector(), $data));
+    }
+
+    public static function provideInvalidHeaders(): iterable
+    {
+        $qoi = 'qoif' . \pack('NNCC', 1, 1, 3, 0);
+        $dds = 'DDS ' . \pack('V', 124) . \str_repeat("\0", 120);
+
+        return [
+            'QOI truncated' => [\substr($qoi, 0, 13)],
+            'QOI zero width' => [\substr_replace($qoi, \pack('N', 0), 4, 4)],
+            'QOI zero height' => [\substr_replace($qoi, \pack('N', 0), 8, 4)],
+            'QOI channels' => [\substr_replace($qoi, "\x02", 12, 1)],
+            'QOI colorspace' => [\substr_replace($qoi, "\x02", 13, 1)],
+            'DDS truncated' => [\substr($dds, 0, 127)],
+            'DDS zero dimensions' => [$dds],
+            'DDS wrong header size' => ['DDS ' . \pack('V', 125) . \str_repeat("\0", 120)],
+            'EXR truncated' => ["\x76\x2F\x31\x01\x02"],
+            'EXR unknown version' => ["\x76\x2F\x31\x01\x03\0\0\0"],
+            'EXR reserved flags' => ["\x76\x2F\x31\x01\x02\0\0\x80"],
+            'DjVu truncated' => ['AT&TFORM' . \pack('N', 4) . 'DJV'],
+            'DjVu unrelated FORM' => ['AT&TFORM' . \pack('N', 4) . 'XXXX'],
+            'DjVu invalid FORM length' => ['AT&TFORM' . \pack('N', 3) . 'DJVU'],
+            'Netpbm prose' => ['P1 is a priority'],
+            'Netpbm missing whitespace' => ["P61 1\n255\n"],
+            'Netpbm zero width' => ["P6\n0 1\n255\n"],
+            'Netpbm zero height' => ["P6\n1 0\n255\n"],
+            'Netpbm zero maximum' => ["P6\n1 1\n0\n"],
+            'Netpbm maximum too large' => ["P6\n1 1\n65536\n"],
+            'Netpbm incomplete header' => ["P6\n1 1\n"],
         ];
     }
 
