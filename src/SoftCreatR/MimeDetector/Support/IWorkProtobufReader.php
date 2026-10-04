@@ -10,7 +10,9 @@ declare(strict_types=1);
 
 namespace SoftCreatR\MimeDetector\Support;
 
-/** Reads only the protobuf wire types needed by an iWork archive header. */
+/**
+ * Reads only the protobuf wire types needed by an iWork archive header.
+ */
 final class IWorkProtobufReader
 {
     /**

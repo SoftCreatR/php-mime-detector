@@ -10,7 +10,9 @@ declare(strict_types=1);
 
 namespace SoftCreatR\MimeDetector\Support;
 
-/** Decodes a bounded raw Snappy block without requiring an extension. */
+/**
+ * Decodes a bounded raw Snappy block without requiring an extension.
+ */
 final class SnappyBlockDecoder
 {
     public const MAX_BLOCK_SIZE = 65536;
