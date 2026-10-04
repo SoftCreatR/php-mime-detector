@@ -46,6 +46,14 @@ final class KnownFixtureDetectionTest extends TestCase
     public static function provideNewFormatFixtures(): array
     {
         return [
+            'CAF' => ['fixture-minimal.caf', 'caf', 'audio/x-caf'],
+            'AIFF-C' => ['fixture-compressed.aifc', 'aif', 'audio/aiff'],
+            'AMR-WB' => ['fixture-no-data.awb', 'awb', 'audio/amr-wb'],
+            'multi-channel AMR' => ['fixture-multichannel.amr', 'amr', 'audio/amr'],
+            'multi-channel AMR-WB' => ['fixture-multichannel.awb', 'awb', 'audio/amr-wb'],
+            'extended Opus identification header' => ['fixture-extended-header.opus', 'opus', 'audio/opus'],
+            'Matroska with variable-width sizes' => ['fixture-variable-sizes.mkv', 'mkv', 'video/x-matroska'],
+            'WebM with variable-width sizes' => ['fixture-variable-sizes.webm', 'webm', 'video/webm'],
             'AAC MPEG-2' => ['fixture-adts-mpeg2.aac', 'aac', 'audio/aac'],
             'AAC MPEG-4' => ['fixture-adts-mpeg4.aac', 'aac', 'audio/aac'],
             'AAC MPEG-4 alternate' => ['fixture-adts-mpeg4-2.aac', 'aac', 'audio/aac'],

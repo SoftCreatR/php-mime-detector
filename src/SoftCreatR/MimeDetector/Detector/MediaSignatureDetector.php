@@ -14,6 +14,7 @@ use SoftCreatR\MimeDetector\Attribute\DetectorCategory;
 use SoftCreatR\MimeDetector\Detection\DetectionContext;
 use SoftCreatR\MimeDetector\Detection\FileBuffer;
 use SoftCreatR\MimeDetector\Detection\MimeTypeMatch;
+use SoftCreatR\MimeDetector\Support\EbmlHeaderInspector;
 
 /**
  * Detects audio and video container formats.
@@ -74,17 +75,11 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
         }
 
         if ($buffer->checkForBytes([0x1A, 0x45, 0xDF, 0xA3])) {
-            $idPos = $buffer->searchForBytes([0x42, 0x82]);
-
-            if ($idPos !== -1) {
-                if ($buffer->checkString('matroska', $idPos + 3)) {
-                    return $this->match('mkv', 'video/x-matroska');
-                }
-
-                if ($buffer->checkString('webm', $idPos + 3)) {
-                    return $this->match('webm', 'video/webm');
-                }
-            }
+            return match ((new EbmlHeaderInspector())->documentType($buffer)) {
+                'matroska' => $this->match('mkv', 'video/x-matroska'),
+                'webm' => $this->match('webm', 'video/webm'),
+                default => null,
+            };
         }
 
         if (
@@ -165,32 +160,8 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
             return $this->match('m4a', 'audio/mp4');
         }
 
-        if ($buffer->checkForBytes([0x4F, 0x70, 0x75, 0x73, 0x48, 0x65, 0x61, 0x64], 28)) {
-            return $this->match('opus', 'audio/opus');
-        }
-
         if ($buffer->checkForBytes([0x4F, 0x67, 0x67, 0x53])) {
-            if ($buffer->checkForBytes([0x80, 0x74, 0x68, 0x65, 0x6F, 0x72, 0x61], 28)) {
-                return $this->match('ogv', 'video/ogg');
-            }
-
-            if ($buffer->checkForBytes([0x01, 0x76, 0x69, 0x64, 0x65, 0x6F, 0x00], 28)) {
-                return $this->match('ogm', 'video/ogg');
-            }
-
-            if ($buffer->checkForBytes([0x7F, 0x46, 0x4C, 0x41, 0x43], 28)) {
-                return $this->match('oga', 'audio/ogg');
-            }
-
-            if ($buffer->checkForBytes([0x53, 0x70, 0x65, 0x65, 0x78, 0x20, 0x20], 28)) {
-                return $this->match('spx', 'audio/ogg');
-            }
-
-            if ($buffer->checkForBytes([0x01, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73], 28)) {
-                return $this->match('ogg', 'audio/ogg');
-            }
-
-            return $this->match('ogx', 'application/ogg');
+            return $this->detectOgg($buffer);
         }
 
         if ($buffer->checkForBytes([0x66, 0x4C, 0x61, 0x43])) {
@@ -209,7 +180,40 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
             return $this->match('amr', 'audio/amr');
         }
 
-        if ($buffer->checkForBytes([0x46, 0x4F, 0x52, 0x4D, 0x00])) {
+        if ($buffer->checkString("#!AMR-WB\n")) {
+            return $this->match('awb', 'audio/amr-wb');
+        }
+
+        $multichannelTypes = [
+            "#!AMR_MC1.0\n" => ['amr', 'audio/amr'],
+            "#!AMR-WB_MC1.0\n" => ['awb', 'audio/amr-wb'],
+        ];
+
+        foreach ($multichannelTypes as $magic => $type) {
+            if (!$buffer->checkString($magic)) {
+                continue;
+            }
+
+            $channels = $buffer->sliceAsString(\strlen($magic), 4);
+            // RFC 4867 reserves the upper 28 bits and requires readers to ignore them.
+            $channelCount = \strlen($channels) === 4 ? \ord($channels[3]) & 15 : 0;
+
+            if ($channelCount >= 1 && $channelCount <= 6) {
+                return $this->match(...$type);
+            }
+
+            return null;
+        }
+
+        if (
+            $buffer->checkString("caff\0\x01") && $buffer->length() >= 52
+            && $buffer->checkString('desc', 8)
+            && $buffer->checkString("\0\0\0\0\0\0\0\x20", 12)
+        ) {
+            return $this->match('caf', 'audio/x-caf');
+        }
+
+        if ($buffer->checkString('FORM') && ($buffer->checkString('AIFF', 8) || $buffer->checkString('AIFC', 8))) {
             return $this->match('aif', 'audio/aiff');
         }
 
@@ -265,6 +269,57 @@ final class MediaSignatureDetector extends AbstractSignatureDetector
         }
 
         return null;
+    }
+
+    private function detectOgg(FileBuffer $buffer): ?MimeTypeMatch
+    {
+        if ($buffer->length() < 27 || $buffer->get(4) !== 0 || ($buffer->get(5) & 0xF8) !== 0) {
+            return null;
+        }
+
+        $segments = $buffer->get(26);
+        $bodyOffset = 27 + $segments;
+
+        if ($bodyOffset > $buffer->length()) {
+            return null;
+        }
+
+        $generic = $this->match('ogx', 'application/ogg');
+
+        // Only a beginning-of-stream packet identifies the codec. Continued
+        // packets and pages from the middle of a stream are container-only.
+        if ($segments === 0 || ($buffer->get(5) & 3) !== 2) {
+            return $generic;
+        }
+
+        $packetLength = 0;
+
+        for ($index = 0; $index < $segments; ++$index) {
+            $lace = $buffer->get(27 + $index);
+            $packetLength += $lace;
+
+            if ($lace < 255) {
+                break;
+            }
+        }
+
+        $prefix = $buffer->sliceAsString($bodyOffset, \min($packetLength, 32));
+        $types = [
+            'OpusHead' => ['opus', 'audio/opus'],
+            "\x80theora" => ['ogv', 'video/ogg'],
+            "\x01video\0" => ['ogm', 'video/ogg'],
+            "\x7FFLAC" => ['oga', 'audio/ogg'],
+            'Speex  ' => ['spx', 'audio/ogg'],
+            "\x01vorbis" => ['ogg', 'audio/ogg'],
+        ];
+
+        foreach ($types as $magic => $type) {
+            if (\str_starts_with($prefix, $magic)) {
+                return $this->match(...$type);
+            }
+        }
+
+        return $generic;
     }
 
     private function detectAudio(DetectionContext $context): ?MimeTypeMatch

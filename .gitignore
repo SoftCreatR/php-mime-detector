@@ -7,3 +7,4 @@ phpunit.xml
 /.phpunit.cache
 .phpcs-cache
 .php_cs.cache
+.php-cs-fixer.cache

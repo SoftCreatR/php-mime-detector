@@ -2,14 +2,14 @@
 
 ## Scope and evidence
 
-The 2026-10-04 audit reviewed all 212 MIME names in the bundled catalogue.
+The 2026-10-04 audit reviewed all 214 MIME names in the bundled catalogue.
 The comparison helper recognizes 131 alternate names across 72 format groups.
 This covers documented naming differences for supported formats; it does not
 promise to recognize every historical label or every format supported by libmagic.
 
 The machine-readable [audit snapshot](https://github.com/SoftCreatR/php-mime-detector/blob/main/tests/SoftCreatR/MimeDetector/data/mime-alias-audit.json)
 records the reviewed catalogue, source references and hashes, positive alias
-groups, and 46 excluded comparisons. Tests cover every spelling in both
+groups, and 49 excluded comparisons. Tests cover every spelling in both
 comparison directions, registration under either spelling, and exclusion in
 both directions. Catalogue additions must update the reviewed snapshot.
 
@@ -59,6 +59,8 @@ Examples that remain distinct include:
   modern XML packages, older iWork bundles and current ZIP-based documents.
 - Audio/video or encrypted variants of 3GPP, codec-specific AVI labels, and
   ASCII/binary-specific STL names.
+- AMR and AMR-WB, and encrypted AMR/AMR-WB variants. They are separate formats,
+  even where a desktop MIME database groups encrypted variants as aliases.
 
 The linked snapshot gives a reason for every reviewed exclusion. Differing names
 can reflect a more precise detector result, a coarser result, a misidentification,
@@ -156,12 +158,32 @@ DMG inspection uses the UDIF footer; ID3 inspection skips bounded metadata
 before identifying AAC, FLAC, or MPEG audio. These checks identify formats from
 headers and trailers rather than validating complete decoded contents.
 
-The fixture repository contains 20 new files: generated complete image/archive/
-capture examples three MIT-licensed Mach-O samples, and a generated 64-bit FAT wrapper from
+The first signature audit added 20 files: generated complete image/archive/
+capture examples, three MIT-licensed Mach-O samples, and a generated 64-bit FAT wrapper from
 [file-type](https://github.com/sindresorhus/file-type/tree/32b087c6eaa2c03a083f599cf2f91fe9d1aba452/fixture).
 `signature-audit-fixtures.json` in that repository records generators, source
 URLs, licenses and SHA-256 hashes. Existing JPEG-LS, AAC, tagged FLAC, PE,
 SketchUp, MPEG and UTF-16 fixtures have explicit expected results in the tests.
+
+Further container checks follow [Ogg page framing (RFC 3533)](https://www.rfc-editor.org/rfc/rfc3533.html),
+[EBML element framing (RFC 8794)](https://www.rfc-editor.org/rfc/rfc8794.html),
+[AMR storage headers (RFC 4867)](https://www.rfc-editor.org/rfc/rfc4867.html),
+and [Apple's CAF specification](https://developer.apple.com/library/archive/documentation/MusicAudio/Reference/CAFSpec/CAF_spec/CAF_spec.html).
+Ogg inspection uses the segment table to find the first packet, checks version
+and flags, and identifies codecs only on a beginning-of-stream page. A later or
+continued page remains generic Ogg. EBML inspection stays within the first 4096
+buffered bytes and requires complete header elements; it ignores DocType-like
+bytes in other payloads and rejects duplicate DocType elements. It accepts
+finite size fields of widths 1 through 8 without overflowing integers.
+
+CAF returns the conventional `audio/x-caf` name. AMR-WB returns the separately
+registered `audio/amr-wb`, including multi-channel storage files. Multi-channel
+AMR headers respect reserved-bit handling and the supported 1–6 channel layouts.
+AIFF detection requires the `AIFF` or `AIFC` form type. Eight additional complete
+fixtures cover these changes, including an extended Opus identification packet
+and variable-width Matroska/WebM sizes. The fixture repository's
+`generators/media-containers.py` recreates them and updates the provenance hashes.
+These checks do not verify Ogg CRCs or decode complete streams.
 
 To compare every local fixture with the installed `fileinfo` database:
 

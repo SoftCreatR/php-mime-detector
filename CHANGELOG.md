@@ -7,12 +7,16 @@
 - Detect QOI, DDS, OpenEXR, DjVu, JPEG-LS, Netpbm bitmap/graymap/pixmap,
   PCAPNG, nanosecond PCAP, lzop, zlib, AAC ADTS, MPEG layer I, SketchUp,
   32-bit and universal Mach-O, and specifically identified PE executables.
+- Detect Core Audio Format (CAF), AMR-WB, and multi-channel AMR/AMR-WB files;
+  include AIFF-C and `.aiff`/`.aifc` extension lookups.
 - Audit the entire MIME catalogue against libmagic, shared-mime-info,
   WebKit, and IANA definitions. Support 131 alternate names across 72
   format groups, including historical libmagic spellings.
 - Add fixture provenance, explicit expectations for the new detections,
   malformed-header regressions, and a development tool to compare the corpus
   with the locally installed `fileinfo` database.
+- Add reproducible media fixture generators and Composer `format`/`format-check`
+  commands. CI checks the fixer configuration and formatting on PHP 8.1.
 
 ### Fixed
 
@@ -28,6 +32,14 @@
 - Require the full SQLite 3 signature instead of accepting any `SQLi` prefix.
 - Distinguish universal Mach-O from Java class files sharing `CAFEBABE` magic.
 - Correct the MP4 lookup to `audio/mp4` and `video/mp4`.
+- Read Ogg codec markers at the packet offset declared by the segment table,
+  only on beginning-of-stream pages. Unrelated `OpusHead` bytes no longer
+  identify a file as Opus.
+- Parse Matroska/WebM DocType inside the bounded EBML header, supporting
+  variable-width sizes and rejecting truncated headers, duplicate DocType
+  elements, and markers embedded in unrelated data.
+- Require an `AIFF` or `AIFC` form type instead of identifying every IFF file
+  beginning with `FORM` as AIFF audio.
 
 ### Upgrade notes
 

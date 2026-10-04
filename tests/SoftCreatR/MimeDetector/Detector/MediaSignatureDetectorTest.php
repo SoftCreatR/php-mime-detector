@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace SoftCreatR\Tests\MimeDetector\Detector;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SoftCreatR\MimeDetector\ByteCacheHandler;
 use SoftCreatR\MimeDetector\Detection\DetectionContext;
@@ -70,6 +71,59 @@ final class MediaSignatureDetectorTest extends TestCase
         $this->assertInstanceOf(MimeTypeMatch::class, $match);
         $this->assertSame('ogx', $match->extension());
         $this->assertSame('application/ogg', $match->mimeType());
+    }
+
+    #[DataProvider('provideContainerSamples')]
+    public function testParsesContainerBoundaries(string $data, ?string $extension): void
+    {
+        $this->assertSame($extension, $this->detect(new MediaSignatureDetector(), $data)?->extension());
+    }
+
+    public static function provideContainerSamples(): iterable
+    {
+        $ebml = "\x1A\x45\xDF\xA3";
+        $docType = "\x42\x82\x88matroska";
+
+        yield 'two-byte root and child size' => [$ebml . "\x40\x0C\x42\x82\x40\x08matroska", 'mkv'];
+        yield 'eight-byte size' => [$ebml . "\x01\0\0\0\0\0\0\x0B" . $docType, 'mkv'];
+        yield 'padded document type' => [$ebml . "\x88\x42\x82\x85webm\0", 'webm'];
+        yield 'marker in a void element' => [$ebml . "\x8D\xEC\x8B" . $docType, null];
+        yield 'marker after header' => [$ebml . "\x80" . $docType, null];
+        yield 'truncated header' => [$ebml . "\x8C" . $docType, null];
+        yield 'child exceeds header' => [$ebml . "\x8B\x42\x82\x89matroska", null];
+        yield 'invalid child ID' => [$ebml . "\x8C\0" . $docType, null];
+        yield 'truncated integer' => [$ebml . "\x81\x40", null];
+        yield 'unknown root size' => [$ebml . "\xFF" . $docType, null];
+        yield 'unknown child size' => [$ebml . "\x8B\x42\x82\xFFmatroska", null];
+        yield 'integer overflow' => [$ebml . "\x01\x7F\xFF\xFF\xFF\xFF\xFF\xFF" . $docType, null];
+        yield 'duplicate document type' => [$ebml . "\x96" . $docType . $docType, null];
+        yield 'incomplete trailing element' => [$ebml . "\x8C" . $docType . "\xEC", null];
+        yield 'unrecognized document type' => [$ebml . "\x8B\x42\x82\x88otherdoc", null];
+        yield 'empty document type' => [$ebml . "\x83\x42\x82\x80", null];
+        yield 'oversized header' => [$ebml . "\x50\0" . $docType . \str_repeat("\0", 4096), null];
+        yield 'DocType prefix alone' => [$ebml . "\x8E\x42\x82\x8Bmatroska-old", null];
+
+        yield 'two Ogg laces' => [self::createOggPage(\str_pad('OpusHead', 300, "\0")), 'opus'];
+        yield 'maximum Ogg segment table' => [self::createOggPage('OpusHead', 2, 255), 'opus'];
+        yield 'empty first Ogg packet' => [self::createOggPage('OpusHead', 2, 2, true), 'ogx'];
+        yield 'Ogg codec prefix outside first packet' => [self::createOggPage('OpusHead', 2, 1, false, 4), 'ogx'];
+        yield 'continued Ogg packet' => [self::createOggPage('OpusHead', 1), 'ogx'];
+        yield 'Ogg page without BOS flag' => [self::createOggPage('OpusHead', 0), 'ogx'];
+        yield 'Opus marker outside Ogg' => [\str_repeat("\0", 28) . 'OpusHead', null];
+        yield 'unsupported Ogg version' => ["OggS\x01" . \str_repeat("\0", 30), null];
+        yield 'reserved Ogg flags' => [self::createOggPage('OpusHead', 8), null];
+        yield 'incomplete Ogg header' => ['OggS', null];
+        yield 'incomplete Ogg segment table' => ['OggS' . \str_repeat("\0", 22) . "\x02\x13", null];
+        yield 'IFF bitmap is not AIFF' => ['FORM' . \pack('N', 4) . 'ILBM', null];
+        yield 'truncated AIFF' => ['FORM' . "\0", null];
+        yield 'invalid CAF version' => ["caff\0\x02\0\0desc" . \pack('J', 32) . \str_repeat("\0", 32), null];
+        yield 'invalid CAF description size' => ["caff\0\x01\0\0desc" . \pack('J', 31) . \str_repeat("\0", 32), null];
+        yield 'incomplete CAF description' => ["caff\0\x01\0\0desc" . \pack('J', 32), null];
+        yield 'AMR-WB newline required' => ['#!AMR-WB', null];
+        yield 'multi-channel AMR reserved bits' => ["#!AMR_MC1.0\n\xFF\xFF\xFF\xF2", 'amr'];
+        yield 'multi-channel AMR-WB' => ["#!AMR-WB_MC1.0\n" . \pack('N', 2), 'awb'];
+        yield 'invalid multi-channel AMR count' => ["#!AMR_MC1.0\n" . \pack('N', 0), null];
+        yield 'incomplete multi-channel AMR description' => ["#!AMR_MC1.0\n\0", null];
     }
 
     public function testDetectsM4aBrandFromIsoContainer(): void
@@ -149,8 +203,8 @@ final class MediaSignatureDetectorTest extends TestCase
             'dsf' => ['DSD ' . \str_repeat("\0", 4), 'dsf', 'audio/x-dsf'],
             'mp4-box' => ["\x33\x67\x70\x35" . \str_repeat("\0", 4), 'mp4', 'video/mp4'],
             'mid' => ['MThd' . \str_repeat("\0", 4), 'mid', 'audio/midi'],
-            'mkv' => ["\x1A\x45\xDF\xA3\x00\x00\x42\x82\x08matroska", 'mkv', 'video/x-matroska'],
-            'webm' => ["\x1A\x45\xDF\xA3\x00\x00\x42\x82\x08webm", 'webm', 'video/webm'],
+            'mkv' => ["\x1A\x45\xDF\xA3\x8B\x42\x82\x88matroska", 'mkv', 'video/x-matroska'],
+            'webm' => ["\x1A\x45\xDF\xA3\x87\x42\x82\x84webm", 'webm', 'video/webm'],
             'mov-free' => [\str_repeat("\0", 4) . 'free' . \str_repeat("\0", 4), 'mov', 'video/quicktime'],
             'rm' => ['.RMF' . \str_repeat("\0", 4), 'rm', 'application/vnd.rn-realmedia'],
             'avi' => ['RIFF' . \str_repeat("\0", 4) . 'AVI ', 'avi', 'video/vnd.avi'],
@@ -174,17 +228,20 @@ final class MediaSignatureDetectorTest extends TestCase
             'mp2-fff4' => ["\xFF\xF4" . \str_repeat("\0", 18), 'mp2', 'audio/mpeg'],
             'AAC ADTS' => ["\xFF\xF1\x50\x80\x01\x3F\xFC\0\0", 'aac', 'audio/aac'],
             'm4a-audio-marker' => ["\x00\x00\x00\x0BftypM4A", 'm4a', 'audio/mp4'],
-            'opus' => ['OggS' . \str_repeat("\0", 24) . 'OpusHead', 'opus', 'audio/opus'],
-            'ogv' => ['OggS' . \str_repeat("\0", 24) . "\x80theora", 'ogv', 'video/ogg'],
-            'ogm' => ['OggS' . \str_repeat("\0", 24) . "\x01video\x00", 'ogm', 'video/ogg'],
-            'oga' => ['OggS' . \str_repeat("\0", 24) . "\x7FFLAC", 'oga', 'audio/ogg'],
-            'spx' => ['OggS' . \str_repeat("\0", 24) . 'Speex  ', 'spx', 'audio/ogg'],
-            'ogg' => ['OggS' . \str_repeat("\0", 24) . "\x01vorbis", 'ogg', 'audio/ogg'],
+            'opus' => [self::createOggPage('OpusHead'), 'opus', 'audio/opus'],
+            'ogv' => [self::createOggPage("\x80theora"), 'ogv', 'video/ogg'],
+            'ogm' => [self::createOggPage("\x01video\x00"), 'ogm', 'video/ogg'],
+            'oga' => [self::createOggPage("\x7FFLAC"), 'oga', 'audio/ogg'],
+            'spx' => [self::createOggPage('Speex  '), 'spx', 'audio/ogg'],
+            'ogg' => [self::createOggPage("\x01vorbis"), 'ogg', 'audio/ogg'],
             'flac' => ['fLaC' . \str_repeat("\0", 4), 'flac', 'audio/x-flac'],
             'ape' => ['MAC ' . \str_repeat("\0", 4), 'ape', 'audio/ape'],
             'wavpack' => ['wvpk' . \str_repeat("\0", 4), 'wv', 'audio/wavpack'],
             'amr' => ["#!AMR\n" . \str_repeat("\0", 4), 'amr', 'audio/amr'],
-            'aif' => ['FORM' . "\x00" . \str_repeat("\0", 4), 'aif', 'audio/aiff'],
+            'amr-wb' => ["#!AMR-WB\n\x7C", 'awb', 'audio/amr-wb'],
+            'aif' => ['FORM' . \pack('N', 4) . 'AIFF', 'aif', 'audio/aiff'],
+            'aifc' => ['FORM' . \pack('N', 4) . 'AIFC', 'aif', 'audio/aiff'],
+            'caf' => ["caff\0\x01\xFF\xFFdesc" . \pack('J', 32) . \str_repeat("\0", 32), 'caf', 'audio/x-caf'],
             'mxf' => [
                 \pack('C*', 0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x01, 0x02),
                 'mxf',
@@ -207,6 +264,27 @@ final class MediaSignatureDetectorTest extends TestCase
             'm4v' => ['M4V ', 'm4v', 'video/x-m4v'],
             'f4b' => ['F4B ', 'f4b', 'audio/mp4'],
         ];
+    }
+
+    private static function createOggPage(
+        string $packet,
+        int $flags = 2,
+        ?int $segmentCount = null,
+        bool $emptyFirstPacket = false,
+        ?int $declaredLength = null,
+    ): string {
+        $length = $declaredLength ?? \strlen($packet);
+        $laces = \str_repeat("\xFF", \intdiv($length, 255)) . \chr($length % 255);
+
+        if ($emptyFirstPacket) {
+            $laces = "\0" . $laces;
+        }
+
+        if ($segmentCount !== null) {
+            $laces = \str_pad($laces, $segmentCount, "\0");
+        }
+
+        return "OggS\0" . \chr($flags) . \str_repeat("\0", 20) . \chr(\strlen($laces)) . $laces . $packet;
     }
 
     private static function createIsoBrandSample(string $brand): string

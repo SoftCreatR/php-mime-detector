@@ -40,6 +40,36 @@ Before submitting a pull request:
 
 If the project maintainer has any additional requirements, you will find them listed here.
 
+### Local development
+
+Use PHP 8.1 or later and initialize the fixture submodule before running tests:
+
+```sh
+git submodule update --init --recursive
+composer install
+composer test -- --no-progress
+composer cs-check
+composer format-check
+```
+
+`composer format` applies the repository's PHP-CS-Fixer rules and custom blank-line
+fixer. Run it with PHP 8.1 when preparing changes, matching the formatting job in CI.
+`composer cs-fix` applies PHPCS fixes; both checks should pass before submitting.
+These tools are development dependencies; library consumers do not need them.
+
+For a detection change, add a complete fixture to `SoftCreatR/mime-detector-fixtures`,
+record its source or generator, license and hash, then update this repository's
+submodule pointer. Add explicit expected results and malformed-header regressions.
+Generated media fixtures can be recreated with `python3 generators/media-containers.py`
+from the fixture repository; the generator also requires FFmpeg.
+
+When adding a MIME type, update the bundled lookup catalogue and the reviewed
+snapshot in `tests/SoftCreatR/MimeDetector/data/mime-alias-audit.json`. Keep container
+and subtype relationships separate from equivalent spellings; see the
+[MIME compatibility audit](docs/mime-compatibility.md).
+
+### Submission checks
+
 -   **[PSR-12 Coding Standard](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-12-extended-coding-style-guide.md)**
     -   The easiest way to apply the conventions is to install [PHP Code Sniffer](http://pear.php.net/package/PHP_CodeSniffer).
 

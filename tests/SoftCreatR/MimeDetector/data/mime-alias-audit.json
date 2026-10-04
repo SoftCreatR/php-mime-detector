@@ -12,7 +12,9 @@
             "sha256": "b7f4cebbe7f96ba19a3ade63348f2521e6afae1d412b06c0bf9c25f1f35bb164"
         },
         "iana": "https://www.iana.org/assignments/media-types/media-types.xhtml",
-        "font": "https://www.rfc-editor.org/rfc/rfc8081"
+        "font": "https://www.rfc-editor.org/rfc/rfc8081",
+        "amr": "https://www.rfc-editor.org/rfc/rfc4867.html",
+        "caf": "https://developer.apple.com/library/archive/documentation/MusicAudio/Reference/CAFSpec/CAF_spec/CAF_spec.html"
     },
     "reviewedCatalogue": [
         "application/avro",
@@ -129,6 +131,7 @@
         "audio/aac",
         "audio/aiff",
         "audio/amr",
+        "audio/amr-wb",
         "audio/ape",
         "audio/basic",
         "audio/flac",
@@ -143,6 +146,7 @@
         "audio/wav",
         "audio/wavpack",
         "audio/x-aiff",
+        "audio/x-caf",
         "audio/x-dsf",
         "audio/x-flac",
         "audio/x-it",
@@ -735,6 +739,21 @@
             "first": "application/eps",
             "second": "application/postscript",
             "reason": "Encapsulated PostScript is a subtype of PostScript."
+        },
+        {
+            "first": "audio/amr",
+            "second": "audio/amr-wb",
+            "reason": "AMR and AMR-WB are different codecs, with separate registrations and storage signatures."
+        },
+        {
+            "first": "audio/amr",
+            "second": "audio/amr-encrypted",
+            "reason": "Encrypted AMR is not an alternate spelling for an unencrypted AMR file."
+        },
+        {
+            "first": "audio/amr-wb",
+            "second": "audio/amr-wb-encrypted",
+            "reason": "Encrypted AMR-WB is not an alternate spelling for an unencrypted AMR-WB file."
         }
     ]
 }
